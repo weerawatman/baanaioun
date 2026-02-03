@@ -11,25 +11,20 @@ interface AddRenovationProjectModalProps {
   assets: Asset[];
 }
 
-const statusOptions: { value: RenovationStatus; label: string }[] = [
-  { value: 'planned', label: 'วางแผน' },
-  { value: 'in_progress', label: 'กำลังดำเนินการ' },
-  { value: 'completed', label: 'เสร็จสิ้น' },
-  { value: 'cancelled', label: 'ยกเลิก' },
+const statusOptions: { value: RenovationStatus; label: string; color: string }[] = [
+  { value: 'planned', label: 'วางแผน', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300' },
+  { value: 'in_progress', label: 'กำลังดำเนินการ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  { value: 'completed', label: 'เสร็จสิ้น', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  { value: 'cancelled', label: 'ยกเลิก', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 ];
 
-const projectTypeOptions: { value: ProjectType; label: string }[] = [
-  { value: 'renovation', label: 'ปรับปรุง (Renovation)' },
-  { value: 'new_construction', label: 'สร้างใหม่ (New Construction)' },
-];
-
-const propertyTypeOptions: { value: PropertyType; label: string }[] = [
-  { value: 'house', label: 'บ้านเดี่ยว' },
-  { value: 'semi_detached_house', label: 'บ้านแฝด' },
-  { value: 'townhouse', label: 'ทาวน์เฮ้าส์' },
-  { value: 'condo', label: 'คอนโดมิเนียม' },
-  { value: 'commercial', label: 'อาคารพาณิชย์' },
-  { value: 'other', label: 'อื่นๆ' },
+const propertyTypeOptions: { value: PropertyType; label: string; icon: string }[] = [
+  { value: 'house', label: 'บ้านเดี่ยว', icon: '🏠' },
+  { value: 'semi_detached_house', label: 'บ้านแฝด', icon: '🏘️' },
+  { value: 'townhouse', label: 'ทาวน์เฮ้าส์', icon: '🏡' },
+  { value: 'condo', label: 'คอนโดมิเนียม', icon: '🏢' },
+  { value: 'commercial', label: 'อาคารพาณิชย์', icon: '🏬' },
+  { value: 'other', label: 'อื่นๆ', icon: '📦' },
 ];
 
 export default function AddRenovationProjectModal({
@@ -82,7 +77,6 @@ export default function AddRenovationProjectModal({
 
       if (insertError) throw insertError;
 
-      // Reset form
       setFormData({
         asset_id: '',
         name: '',
@@ -107,16 +101,17 @@ export default function AddRenovationProjectModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-900 w-full md:max-w-2xl md:mx-4 md:rounded-xl shadow-xl max-h-[95vh] md:max-h-[90vh] flex flex-col rounded-t-xl md:rounded-xl">
+        {/* Header - Sticky */}
+        <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               สร้างโปรเจกต์ใหม่
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -125,67 +120,65 @@ export default function AddRenovationProjectModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
-              {error}
-            </div>
-          )}
+        {/* Form Content - Scrollable */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 space-y-5">
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* ประเภทโปรเจกต์ */}
-            <div className="md:col-span-2">
+            <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 ประเภทโปรเจกต์ <span className="text-red-500">*</span>
               </label>
-              <div className="flex gap-4">
-                {projectTypeOptions.map(option => (
-                  <label
-                    key={option.value}
-                    className={`flex-1 relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                      formData.project_type === option.value
-                        ? option.value === 'renovation'
-                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                          : 'border-green-500 bg-green-50 dark:bg-green-900/20'
-                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="project_type"
-                      value={option.value}
-                      checked={formData.project_type === option.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className="text-center">
-                      {option.value === 'renovation' ? (
-                        <svg className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                      ) : (
-                        <svg className="w-8 h-8 mx-auto mb-2 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                        </svg>
-                      )}
-                      <span className={`font-medium ${
-                        formData.project_type === option.value
-                          ? option.value === 'renovation'
-                            ? 'text-blue-700 dark:text-blue-300'
-                            : 'text-green-700 dark:text-green-300'
-                          : 'text-gray-700 dark:text-gray-300'
-                      }`}>
-                        {option.label}
-                      </span>
-                    </div>
-                  </label>
-                ))}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, project_type: 'renovation' }))}
+                  className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all ${
+                    formData.project_type === 'renovation'
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <span className="text-3xl mb-2">🔧</span>
+                  <span className={`font-medium text-sm ${
+                    formData.project_type === 'renovation'
+                      ? 'text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}>
+                    ปรับปรุง
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Renovation</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, project_type: 'new_construction' }))}
+                  className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all ${
+                    formData.project_type === 'new_construction'
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <span className="text-3xl mb-2">🏗️</span>
+                  <span className={`font-medium text-sm ${
+                    formData.project_type === 'new_construction'
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}>
+                    สร้างใหม่
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">New Construction</span>
+                </button>
               </div>
             </div>
 
             {/* เลือกทรัพย์สิน */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 ทรัพย์สิน <span className="text-red-500">*</span>
               </label>
               <select
@@ -193,7 +186,7 @@ export default function AddRenovationProjectModal({
                 value={formData.asset_id}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
               >
                 <option value="">-- เลือกทรัพย์สิน --</option>
                 {assets.map(asset => (
@@ -206,33 +199,36 @@ export default function AddRenovationProjectModal({
 
             {/* ประเภททรัพย์สินเป้าหมาย (สำหรับโปรเจกต์สร้างใหม่) */}
             {formData.project_type === 'new_construction' && (
-              <div className="md:col-span-2">
+              <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  ประเภททรัพย์สินเป้าหมาย <span className="text-red-500">*</span>
+                  ประเภททรัพย์สินที่จะสร้าง <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="target_property_type"
-                  value={formData.target_property_type}
-                  onChange={handleChange}
-                  required={formData.project_type === 'new_construction'}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">-- เลือกประเภททรัพย์สินที่จะสร้าง --</option>
+                <div className="grid grid-cols-3 gap-2">
                   {propertyTypeOptions.map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, target_property_type: option.value }))}
+                      className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                        formData.target_property_type === option.value
+                          ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      <span className="text-xl mb-1">{option.icon}</span>
+                      <span className="text-xs font-medium text-center leading-tight">{option.label}</span>
+                    </button>
                   ))}
-                </select>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                </div>
+                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                   เมื่อโปรเจกต์เสร็จสิ้น ระบบจะอัปเดตประเภททรัพย์สินโดยอัตโนมัติ
                 </p>
               </div>
             )}
 
             {/* ชื่อโปรเจกต์ */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 ชื่อโปรเจกต์ <span className="text-red-500">*</span>
               </label>
               <input
@@ -241,110 +237,131 @@ export default function AddRenovationProjectModal({
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                autoComplete="off"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                 placeholder={formData.project_type === 'renovation' ? 'เช่น ปรับปรุงห้องน้ำ, ทาสีใหม่' : 'เช่น สร้างบ้าน 2 ชั้น, สร้างทาวน์โฮม'}
               />
             </div>
 
-            {/* วันที่เริ่ม */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                วันที่เริ่ม <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                name="start_date"
-                value={formData.start_date}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* วันที่เริ่ม และ วันที่สิ้นสุด */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  วันที่เริ่ม <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  name="start_date"
+                  value={formData.start_date}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  วันที่สิ้นสุด
+                </label>
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formData.end_date}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                />
+              </div>
             </div>
 
-            {/* วันที่สิ้นสุด */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                วันที่สิ้นสุด (คาดการณ์)
-              </label>
-              <input
-                type="date"
-                name="end_date"
-                value={formData.end_date}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+            {/* งบประมาณ และ สถานะ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  งบประมาณ (บาท) <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    name="budget"
+                    value={formData.budget}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    placeholder="0"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
+                    ฿
+                  </span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  สถานะ <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                >
+                  {statusOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* งบประมาณ */}
+            {/* รายละเอียด */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                งบประมาณ (บาท) <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                รายละเอียด
               </label>
-              <input
-                type="number"
-                name="budget"
-                value={formData.budget}
+              <textarea
+                name="description"
+                value={formData.description}
                 onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
+                placeholder="รายละเอียดของโปรเจกต์..."
               />
             </div>
+          </div>
 
-            {/* สถานะ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                สถานะ <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          {/* Footer - Sticky */}
+          <div className="flex-shrink-0 px-4 py-4 md:px-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
               >
-                {statusOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full sm:w-auto px-6 py-3 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2 ${
+                  formData.project_type === 'renovation'
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-green-600 hover:bg-green-700'
+                }`}
+              >
+                {loading ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'สร้างโปรเจกต์'
+                )}
+              </button>
             </div>
-          </div>
-
-          {/* รายละเอียด */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              รายละเอียด
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="รายละเอียดของโปรเจกต์..."
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'กำลังบันทึก...' : 'สร้างโปรเจกต์'}
-            </button>
           </div>
         </form>
       </div>

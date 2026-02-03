@@ -10,14 +10,14 @@ interface AddAssetModalProps {
   onSuccess: () => void;
 }
 
-const propertyTypes: { value: PropertyType; label: string }[] = [
-  { value: 'land', label: 'ที่ดินเปล่า' },
-  { value: 'house', label: 'บ้านเดี่ยว' },
-  { value: 'semi_detached_house', label: 'บ้านแฝด' },
-  { value: 'condo', label: 'คอนโดมิเนียม' },
-  { value: 'townhouse', label: 'ทาวน์เฮาส์' },
-  { value: 'commercial', label: 'อาคารพาณิชย์' },
-  { value: 'other', label: 'อื่นๆ' },
+const propertyTypes: { value: PropertyType; label: string; icon: string }[] = [
+  { value: 'land', label: 'ที่ดินเปล่า', icon: '🏞️' },
+  { value: 'house', label: 'บ้านเดี่ยว', icon: '🏠' },
+  { value: 'semi_detached_house', label: 'บ้านแฝด', icon: '🏘️' },
+  { value: 'condo', label: 'คอนโดมิเนียม', icon: '🏢' },
+  { value: 'townhouse', label: 'ทาวน์เฮาส์', icon: '🏡' },
+  { value: 'commercial', label: 'อาคารพาณิชย์', icon: '🏬' },
+  { value: 'other', label: 'อื่นๆ', icon: '📦' },
 ];
 
 export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetModalProps) {
@@ -66,7 +66,6 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
 
       if (insertError) throw insertError;
 
-      // Reset form
       setFormData({
         title_deed_number: '',
         name: '',
@@ -93,16 +92,17 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-900 w-full md:max-w-2xl md:mx-4 md:rounded-xl shadow-xl max-h-[95vh] md:max-h-[90vh] flex flex-col rounded-t-xl md:rounded-xl">
+        {/* Header - Sticky */}
+        <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               เพิ่มทรัพย์สินใหม่
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -111,207 +111,269 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
-              {error}
-            </div>
-          )}
+        {/* Form Content - Scrollable */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 space-y-6">
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* เลขที่โฉนด */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                เลขที่โฉนด <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                name="title_deed_number"
-                value={formData.title_deed_number}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="เช่น 12345"
-              />
+            {/* Section: ข้อมูลทรัพย์สิน */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                ข้อมูลทรัพย์สิน
+              </h3>
+
+              {/* เลขที่โฉนด */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  เลขที่โฉนด <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="title_deed_number"
+                  value={formData.title_deed_number}
+                  onChange={handleChange}
+                  required
+                  autoComplete="off"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  placeholder="เช่น 12345"
+                />
+              </div>
+
+              {/* ชื่อทรัพย์สิน */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  ชื่อทรัพย์สิน
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  autoComplete="off"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  placeholder="เช่น บ้านพักตากอากาศ"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  หากไม่ระบุ จะใช้เลขที่โฉนดแทน
+                </p>
+              </div>
+
+              {/* ประเภททรัพย์สิน - Grid of buttons */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  ประเภททรัพย์สิน <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {propertyTypes.map(type => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, property_type: type.value }))}
+                      className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                        formData.property_type === type.value
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-400'
+                      }`}
+                    >
+                      <span className="text-xl mb-1">{type.icon}</span>
+                      <span className="text-xs font-medium text-center leading-tight">{type.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* ที่อยู่ */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  ที่อยู่
+                </label>
+                <input
+                  type="text"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  autoComplete="street-address"
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  placeholder="ที่ตั้งทรัพย์สิน"
+                />
+              </div>
             </div>
 
-            {/* ชื่อทรัพย์สิน */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ชื่อทรัพย์สิน
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="เช่น บ้านพักตากอากาศ"
-              />
+            {/* Section: มูลค่าและการเงิน */}
+            <div className="space-y-4 pt-2">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                มูลค่าและการเงิน
+              </h3>
+
+              {/* ราคาซื้อ และ ราคาประเมิน */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    ราคาซื้อ (บาท) <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      name="purchase_price"
+                      value={formData.purchase_price}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
+                      ฿
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    ราคาประเมิน (บาท)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      name="appraised_value"
+                      value={formData.appraised_value}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
+                      ฿
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ธนาคารจำนอง และ วงเงินจำนอง */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    ธนาคารจำนอง
+                  </label>
+                  <input
+                    type="text"
+                    name="mortgage_bank"
+                    value={formData.mortgage_bank}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    placeholder="เช่น ธนาคารกสิกรไทย"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    วงเงินจำนอง (บาท)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      name="mortgage_amount"
+                      value={formData.mortgage_amount}
+                      onChange={handleChange}
+                      className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                      placeholder="0"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">
+                      ฿
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* ประเภททรัพย์สิน */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ประเภททรัพย์สิน <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="property_type"
-                value={formData.property_type}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            {/* Section: วันที่สำคัญ */}
+            <div className="space-y-4 pt-2">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                วันที่สำคัญ
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    วันหมดอายุประกันอัคคีภัย
+                  </label>
+                  <input
+                    type="date"
+                    name="fire_insurance_expiry"
+                    value={formData.fire_insurance_expiry}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                    กำหนดจ่ายภาษีที่ดิน
+                  </label>
+                  <input
+                    type="date"
+                    name="land_tax_due_date"
+                    value={formData.land_tax_due_date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section: หมายเหตุ */}
+            <div className="space-y-4 pt-2">
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                หมายเหตุ
+              </h3>
+
+              <div>
+                <textarea
+                  name="notes"
+                  value={formData.notes}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
+                  placeholder="รายละเอียดเพิ่มเติม..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Footer - Sticky */}
+          <div className="flex-shrink-0 px-4 py-4 md:px-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
               >
-                {propertyTypes.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'บันทึก'
+                )}
+              </button>
             </div>
-
-            {/* ที่อยู่ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ที่อยู่
-              </label>
-              <input
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="ที่ตั้งทรัพย์สิน"
-              />
-            </div>
-
-            {/* ราคาซื้อ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ราคาซื้อ (บาท) <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                name="purchase_price"
-                value={formData.purchase_price}
-                onChange={handleChange}
-                required
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* ราคาประเมิน */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ราคาประเมิน (บาท)
-              </label>
-              <input
-                type="number"
-                name="appraised_value"
-                value={formData.appraised_value}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* ธนาคารจำนอง */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                ธนาคารจำนอง
-              </label>
-              <input
-                type="text"
-                name="mortgage_bank"
-                value={formData.mortgage_bank}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="เช่น ธนาคารกสิกรไทย"
-              />
-            </div>
-
-            {/* วงเงินจำนอง */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                วงเงินจำนอง (บาท)
-              </label>
-              <input
-                type="number"
-                name="mortgage_amount"
-                value={formData.mortgage_amount}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="0.00"
-              />
-            </div>
-
-            {/* วันหมดอายุประกันอัคคีภัย */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                วันหมดอายุประกันอัคคีภัย
-              </label>
-              <input
-                type="date"
-                name="fire_insurance_expiry"
-                value={formData.fire_insurance_expiry}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* กำหนดจ่ายภาษีที่ดิน */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                กำหนดจ่ายภาษีที่ดิน
-              </label>
-              <input
-                type="date"
-                name="land_tax_due_date"
-                value={formData.land_tax_due_date}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
-
-          {/* หมายเหตุ */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              หมายเหตุ
-            </label>
-            <textarea
-              name="notes"
-              value={formData.notes}
-              onChange={handleChange}
-              rows={3}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="รายละเอียดเพิ่มเติม..."
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'กำลังบันทึก...' : 'บันทึก'}
-            </button>
           </div>
         </form>
       </div>

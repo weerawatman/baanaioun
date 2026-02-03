@@ -12,17 +12,17 @@ interface AddExpenseModalProps {
   assetId: string;
 }
 
-const expenseCategories: { value: ExpenseCategory; label: string; color: string; group: 'general' | 'construction' }[] = [
+const expenseCategories: { value: ExpenseCategory; label: string; icon: string; group: 'general' | 'construction' }[] = [
   // General categories
-  { value: 'materials', label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', group: 'general' },
-  { value: 'labor', label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', group: 'general' },
-  { value: 'service', label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', group: 'general' },
-  { value: 'electricity', label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', group: 'general' },
+  { value: 'materials', label: 'ค่าวัสดุ', icon: '🧱', group: 'general' },
+  { value: 'labor', label: 'ค่าแรง', icon: '👷', group: 'general' },
+  { value: 'service', label: 'ค่าบริการช่าง', icon: '🔧', group: 'general' },
+  { value: 'electricity', label: 'ค่าไฟฟ้า', icon: '⚡', group: 'general' },
   // Construction-specific categories
-  { value: 'land_filling', label: 'ถมดิน', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', group: 'construction' },
-  { value: 'building_permit', label: 'ขออนุญาต', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', group: 'construction' },
-  { value: 'foundation', label: 'งานฐานราก', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', group: 'construction' },
-  { value: 'architect_fee', label: 'ค่าสถาปนิก', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400', group: 'construction' },
+  { value: 'land_filling', label: 'ถมดิน', icon: '🚜', group: 'construction' },
+  { value: 'building_permit', label: 'ขออนุญาต', icon: '📋', group: 'construction' },
+  { value: 'foundation', label: 'งานฐานราก', icon: '🏗️', group: 'construction' },
+  { value: 'architect_fee', label: 'ค่าสถาปนิก', icon: '📐', group: 'construction' },
 ];
 
 export default function AddExpenseModal({
@@ -68,7 +68,6 @@ export default function AddExpenseModal({
 
       if (insertError) throw insertError;
 
-      // Reset form
       setFormData({
         category: 'materials',
         amount: '',
@@ -88,17 +87,21 @@ export default function AddExpenseModal({
 
   if (!isOpen) return null;
 
+  const generalCategories = expenseCategories.filter(c => c.group === 'general');
+  const constructionCategories = expenseCategories.filter(c => c.group === 'construction');
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+    <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-900 w-full md:max-w-lg md:mx-4 md:rounded-xl shadow-xl max-h-[95vh] md:max-h-[90vh] flex flex-col rounded-t-xl md:rounded-xl">
+        {/* Header - Sticky */}
+        <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
               บันทึกค่าใช้จ่าย
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -107,153 +110,163 @@ export default function AddExpenseModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
-              {error}
+        {/* Form Content - Scrollable */}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6 space-y-5">
+            {error && (
+              <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            {/* หมวดหมู่ */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                หมวดหมู่ <span className="text-red-500">*</span>
+              </label>
+
+              {/* General Categories */}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                ทั่วไป
+              </p>
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                {generalCategories.map(cat => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
+                    className={`flex items-center gap-2 px-3 py-3 rounded-lg border-2 transition-all ${
+                      formData.category === cat.value
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    <span className="text-lg">{cat.icon}</span>
+                    <span className="text-sm font-medium">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Construction-specific Categories */}
+              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+                งานก่อสร้าง
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {constructionCategories.map(cat => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
+                    className={`flex items-center gap-2 px-3 py-3 rounded-lg border-2 transition-all ${
+                      formData.category === cat.value
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-600 dark:text-gray-400'
+                    }`}
+                  >
+                    <span className="text-lg">{cat.icon}</span>
+                    <span className="text-sm font-medium">{cat.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
-          {/* หมวดหมู่ */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              หมวดหมู่ <span className="text-red-500">*</span>
-            </label>
-
-            {/* General Categories */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">ทั่วไป</p>
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {expenseCategories.filter(c => c.group === 'general').map(cat => (
-                <label
-                  key={cat.value}
-                  className={`flex items-center justify-center px-3 py-2 rounded-lg border-2 cursor-pointer transition-all ${
-                    formData.category === cat.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="category"
-                    value={cat.value}
-                    checked={formData.category === cat.value}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span className={`px-2 py-1 rounded-md text-sm font-medium ${cat.color}`}>
-                    {cat.label}
-                  </span>
-                </label>
-              ))}
+            {/* จำนวนเงิน - Large input for easy mobile entry */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                จำนวนเงิน (บาท) <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  name="amount"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-4 pr-12 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xl font-semibold transition-shadow"
+                  placeholder="0"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-lg">
+                  ฿
+                </span>
+              </div>
             </div>
 
-            {/* Construction-specific Categories */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">งานก่อสร้าง</p>
-            <div className="grid grid-cols-2 gap-2">
-              {expenseCategories.filter(c => c.group === 'construction').map(cat => (
-                <label
-                  key={cat.value}
-                  className={`flex items-center justify-center px-3 py-2 rounded-lg border-2 cursor-pointer transition-all ${
-                    formData.category === cat.value
-                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="category"
-                    value={cat.value}
-                    checked={formData.category === cat.value}
-                    onChange={handleChange}
-                    className="sr-only"
-                  />
-                  <span className={`px-2 py-1 rounded-md text-sm font-medium ${cat.color}`}>
-                    {cat.label}
-                  </span>
-                </label>
-              ))}
+            {/* วันที่ */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                วันที่ <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+              />
+            </div>
+
+            {/* ร้านค้า/ผู้รับเหมา */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                ร้านค้า/ผู้รับเหมา
+              </label>
+              <input
+                type="text"
+                name="vendor"
+                value={formData.vendor}
+                onChange={handleChange}
+                autoComplete="off"
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                placeholder="เช่น ร้านวัสดุก่อสร้าง, ช่างสมชาย"
+              />
+            </div>
+
+            {/* รายละเอียด */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                รายละเอียด
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow resize-none"
+                placeholder="รายละเอียดเพิ่มเติม..."
+              />
             </div>
           </div>
 
-          {/* จำนวนเงิน */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              จำนวนเงิน (บาท) <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
-              placeholder="0.00"
-            />
-          </div>
-
-          {/* วันที่ */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              วันที่ <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* ร้านค้า/ผู้รับเหมา */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              ร้านค้า/ผู้รับเหมา
-            </label>
-            <input
-              type="text"
-              name="vendor"
-              value={formData.vendor}
-              onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="เช่น ร้านวัสดุก่อสร้าง, ช่างสมชาย"
-            />
-          </div>
-
-          {/* รายละเอียด */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              รายละเอียด
-            </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              rows={2}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="รายละเอียดเพิ่มเติม..."
-            />
-          </div>
-
-          {/* Buttons */}
-          <div className="flex justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-            >
-              ยกเลิก
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {loading ? 'กำลังบันทึก...' : 'บันทึก'}
-            </button>
+          {/* Footer - Sticky */}
+          <div className="flex-shrink-0 px-4 py-4 md:px-6 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full sm:w-auto px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors font-medium"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    กำลังบันทึก...
+                  </>
+                ) : (
+                  'บันทึก'
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
