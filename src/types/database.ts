@@ -3,6 +3,7 @@ export type AssetStatus = 'owned' | 'sold' | 'under_renovation';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ExpenseCategory = 'materials' | 'labor' | 'service' | 'electricity';
 export type ImageCategory = 'purchase' | 'before_renovation' | 'after_renovation';
+export type ProjectType = 'renovation' | 'new_construction';
 
 export interface Asset {
   id: string;
@@ -32,6 +33,8 @@ export interface RenovationProject {
   end_date?: string | null;
   budget: number;
   status: RenovationStatus;
+  project_type: ProjectType;
+  target_property_type?: PropertyType | null;
 }
 
 export interface RenovationProjectWithAsset extends RenovationProject {

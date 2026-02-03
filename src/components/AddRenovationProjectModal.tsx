@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Asset, RenovationStatus } from '@/types/database';
+import { Asset, RenovationStatus, ProjectType, PropertyType } from '@/types/database';
 
 interface AddRenovationProjectModalProps {
   isOpen: boolean;
@@ -16,6 +16,20 @@ const statusOptions: { value: RenovationStatus; label: string }[] = [
   { value: 'in_progress', label: 'กำลังดำเนินการ' },
   { value: 'completed', label: 'เสร็จสิ้น' },
   { value: 'cancelled', label: 'ยกเลิก' },
+];
+
+const projectTypeOptions: { value: ProjectType; label: string }[] = [
+  { value: 'renovation', label: 'ปรับปรุง (Renovation)' },
+  { value: 'new_construction', label: 'สร้างใหม่ (New Construction)' },
+];
+
+const propertyTypeOptions: { value: PropertyType; label: string }[] = [
+  { value: 'house', label: 'บ้านเดี่ยว' },
+  { value: 'semi_detached_house', label: 'บ้านแฝด' },
+  { value: 'townhouse', label: 'ทาวน์เฮ้าส์' },
+  { value: 'condo', label: 'คอนโดมิเนียม' },
+  { value: 'commercial', label: 'อาคารพาณิชย์' },
+  { value: 'other', label: 'อื่นๆ' },
 ];
 
 export default function AddRenovationProjectModal({
@@ -35,6 +49,8 @@ export default function AddRenovationProjectModal({
     end_date: '',
     budget: '',
     status: 'planned' as RenovationStatus,
+    project_type: 'renovation' as ProjectType,
+    target_property_type: '' as PropertyType | '',
   });
 
   const handleChange = (
@@ -58,6 +74,10 @@ export default function AddRenovationProjectModal({
         end_date: formData.end_date || null,
         budget: parseFloat(formData.budget) || 0,
         status: formData.status,
+        project_type: formData.project_type,
+        target_property_type: formData.project_type === 'new_construction' && formData.target_property_type
+          ? formData.target_property_type
+          : null,
       });
 
       if (insertError) throw insertError;
@@ -71,6 +91,8 @@ export default function AddRenovationProjectModal({
         end_date: '',
         budget: '',
         status: 'planned',
+        project_type: 'renovation',
+        target_property_type: '',
       });
 
       onSuccess();
@@ -90,7 +112,7 @@ export default function AddRenovationProjectModal({
         <div className="p-6 border-b border-gray-200 dark:border-gray-800">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              สร้างโปรเจกต์ปรับปรุงใหม่
+              สร้างโปรเจกต์ใหม่
             </h2>
             <button
               onClick={onClose}
@@ -111,6 +133,56 @@ export default function AddRenovationProjectModal({
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* ประเภทโปรเจกต์ */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                ประเภทโปรเจกต์ <span className="text-red-500">*</span>
+              </label>
+              <div className="flex gap-4">
+                {projectTypeOptions.map(option => (
+                  <label
+                    key={option.value}
+                    className={`flex-1 relative flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                      formData.project_type === option.value
+                        ? option.value === 'renovation'
+                          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                          : 'border-green-500 bg-green-50 dark:bg-green-900/20'
+                        : 'border-gray-300 dark:border-gray-700 hover:border-gray-400 dark:hover:border-gray-600'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="project_type"
+                      value={option.value}
+                      checked={formData.project_type === option.value}
+                      onChange={handleChange}
+                      className="sr-only"
+                    />
+                    <div className="text-center">
+                      {option.value === 'renovation' ? (
+                        <svg className="w-8 h-8 mx-auto mb-2 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      ) : (
+                        <svg className="w-8 h-8 mx-auto mb-2 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      )}
+                      <span className={`font-medium ${
+                        formData.project_type === option.value
+                          ? option.value === 'renovation'
+                            ? 'text-blue-700 dark:text-blue-300'
+                            : 'text-green-700 dark:text-green-300'
+                          : 'text-gray-700 dark:text-gray-300'
+                      }`}>
+                        {option.label}
+                      </span>
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* เลือกทรัพย์สิน */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -132,6 +204,32 @@ export default function AddRenovationProjectModal({
               </select>
             </div>
 
+            {/* ประเภททรัพย์สินเป้าหมาย (สำหรับโปรเจกต์สร้างใหม่) */}
+            {formData.project_type === 'new_construction' && (
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  ประเภททรัพย์สินเป้าหมาย <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="target_property_type"
+                  value={formData.target_property_type}
+                  onChange={handleChange}
+                  required={formData.project_type === 'new_construction'}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">-- เลือกประเภททรัพย์สินที่จะสร้าง --</option>
+                  {propertyTypeOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  เมื่อโปรเจกต์เสร็จสิ้น ระบบจะอัปเดตประเภททรัพย์สินโดยอัตโนมัติ
+                </p>
+              </div>
+            )}
+
             {/* ชื่อโปรเจกต์ */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -144,7 +242,7 @@ export default function AddRenovationProjectModal({
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="เช่น ปรับปรุงห้องน้ำ, ทาสีใหม่"
+                placeholder={formData.project_type === 'renovation' ? 'เช่น ปรับปรุงห้องน้ำ, ทาสีใหม่' : 'เช่น สร้างบ้าน 2 ชั้น, สร้างทาวน์โฮม'}
               />
             </div>
 
