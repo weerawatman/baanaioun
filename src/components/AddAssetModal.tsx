@@ -13,6 +13,7 @@ interface AddAssetModalProps {
 const propertyTypes: { value: PropertyType; label: string }[] = [
   { value: 'land', label: 'ที่ดินเปล่า' },
   { value: 'house', label: 'บ้านเดี่ยว' },
+  { value: 'semi_detached_house', label: 'บ้านแฝด' },
   { value: 'condo', label: 'คอนโดมิเนียม' },
   { value: 'townhouse', label: 'ทาวน์เฮาส์' },
   { value: 'commercial', label: 'อาคารพาณิชย์' },
