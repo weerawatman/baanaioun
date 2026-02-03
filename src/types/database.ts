@@ -10,7 +10,7 @@ export type ExpenseCategory =
   | 'building_permit'
   | 'foundation'
   | 'architect_fee';
-export type ImageCategory = 'purchase' | 'before_renovation' | 'after_renovation';
+export type ImageCategory = 'purchase' | 'before_renovation' | 'in_progress' | 'after_renovation' | 'final';
 export type ProjectType = 'renovation' | 'new_construction';
 
 export interface Asset {
@@ -79,6 +79,7 @@ export interface AssetImage {
   caption?: string | null;
   is_primary: boolean;
   category: ImageCategory;
+  renovation_project_id?: string | null;
 }
 
 export type Json =

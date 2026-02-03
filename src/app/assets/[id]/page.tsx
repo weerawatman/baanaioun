@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Asset, AssetImage, PropertyType, ImageCategory } from '@/types/database';
+import { Asset, AssetImage, PropertyType, ImageCategory, RenovationProject } from '@/types/database';
+import ProjectTimelineGallery from '@/components/ProjectTimelineGallery';
 import Link from 'next/link';
 
 export const runtime = 'edge';
@@ -21,7 +22,9 @@ const propertyTypeLabels: Record<PropertyType, string> = {
 const imageCategoryLabels: Record<ImageCategory, { label: string; color: string }> = {
   purchase: { label: 'รูปตอนซื้อ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   before_renovation: { label: 'ก่อนรีโนเวท', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  in_progress: { label: 'ระหว่างดำเนินการ', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
   after_renovation: { label: 'หลังรีโนเวท', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  final: { label: 'รูปสุดท้าย', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
 };
 
 function formatCurrency(amount: number): string {
@@ -54,6 +57,9 @@ export default function AssetDetailPage() {
   const [selectedCategory, setSelectedCategory] = useState<ImageCategory>('purchase');
   const [activeTab, setActiveTab] = useState<ImageCategory | 'all'>('all');
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeProjects, setActiveProjects] = useState<RenovationProject[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
 
   const fetchAsset = useCallback(async () => {
     const { data, error } = await supabase
@@ -84,14 +90,45 @@ export default function AssetDetailPage() {
     }
   }, [assetId]);
 
+  const fetchActiveProjects = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('renovation_projects')
+      .select('*')
+      .eq('asset_id', assetId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching projects:', error);
+    } else {
+      setActiveProjects(data || []);
+    }
+  }, [assetId]);
+
+  const suggestCategory = useCallback((): ImageCategory => {
+    const inProgressProject = activeProjects.find(p => p.status === 'in_progress');
+    if (inProgressProject) return 'in_progress';
+    const plannedProject = activeProjects.find(p => p.status === 'planned');
+    if (plannedProject) return 'before_renovation';
+    return 'purchase';
+  }, [activeProjects]);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchAsset(), fetchImages()]);
+      await Promise.all([fetchAsset(), fetchImages(), fetchActiveProjects()]);
       setLoading(false);
     };
     loadData();
-  }, [fetchAsset, fetchImages]);
+  }, [fetchAsset, fetchImages, fetchActiveProjects]);
+
+  useEffect(() => {
+    const suggested = suggestCategory();
+    setSelectedCategory(suggested);
+    const inProgressProject = activeProjects.find(p => p.status === 'in_progress');
+    if (inProgressProject) {
+      setSelectedProject(inProgressProject.id);
+    }
+  }, [activeProjects, suggestCategory]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -139,6 +176,7 @@ export default function AssetDetailPage() {
           url: publicUrl,
           category: selectedCategory,
           is_primary: images.length === 0,
+          renovation_project_id: selectedProject || null,
         });
 
         if (dbError) {
@@ -300,7 +338,36 @@ export default function AssetDetailPage() {
         <div className="lg:col-span-2">
           <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">รูปภาพ</h2>
+              <div className="flex items-center gap-4">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">รูปภาพ</h2>
+                {/* View Toggle */}
+                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      viewMode === 'grid'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('timeline')}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      viewMode === 'timeline'
+                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
               {/* Upload Section */}
               <div className="flex items-center gap-3">
@@ -313,6 +380,20 @@ export default function AssetDetailPage() {
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
+                {activeProjects.length > 0 && (
+                  <select
+                    value={selectedProject || ''}
+                    onChange={(e) => setSelectedProject(e.target.value || null)}
+                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">ไม่ระบุโปรเจกต์</option>
+                    {activeProjects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer flex items-center gap-2">
                   {uploading ? (
                     <>
@@ -342,73 +423,84 @@ export default function AssetDetailPage() {
               </div>
             </div>
 
-            {/* Category Tabs */}
-            <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-4">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'all'
-                    ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                }`}
-              >
-                ทั้งหมด ({images.length})
-              </button>
-              {(Object.entries(imageCategoryLabels) as [ImageCategory, { label: string; color: string }][]).map(([key, { label }]) => {
-                const count = images.filter(img => img.category === key).length;
-                return (
+            {viewMode === 'grid' ? (
+              <>
+                {/* Category Tabs */}
+                <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 flex-wrap">
                   <button
-                    key={key}
-                    onClick={() => setActiveTab(key)}
+                    onClick={() => setActiveTab('all')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === key
+                      activeTab === 'all'
                         ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
-                    {label} ({count})
+                    ทั้งหมด ({images.length})
                   </button>
-                );
-              })}
-            </div>
+                  {(Object.entries(imageCategoryLabels) as [ImageCategory, { label: string; color: string }][]).map(([key, { label }]) => {
+                    const count = images.filter(img => img.category === key).length;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setActiveTab(key)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          activeTab === key
+                            ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
+                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        {label} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
 
-            {/* Images Grid */}
-            {filteredImages.length === 0 ? (
-              <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <p className="text-lg font-medium mb-2">ยังไม่มีรูปภาพ</p>
-                <p className="text-sm">เลือกประเภทและอัปโหลดรูปภาพของทรัพย์สิน</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredImages.map((image) => (
-                  <div key={image.id} className="relative group">
-                    <div
-                      className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
-                      onClick={() => setLightboxImage(image.url)}
-                    >
-                      <img
-                        src={image.url}
-                        alt={image.caption || 'Asset image'}
-                        className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                      />
-                    </div>
-                    <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${imageCategoryLabels[image.category]?.color}`}>
-                      {imageCategoryLabels[image.category]?.label}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteImage(image)}
-                      className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                {/* Images Grid */}
+                {filteredImages.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-lg font-medium mb-2">ยังไม่มีรูปภาพ</p>
+                    <p className="text-sm">เลือกประเภทและอัปโหลดรูปภาพของทรัพย์สิน</p>
                   </div>
-                ))}
-              </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {filteredImages.map((image) => (
+                      <div key={image.id} className="relative group">
+                        <div
+                          className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                          onClick={() => setLightboxImage(image.url)}
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.caption || 'Asset image'}
+                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        </div>
+                        <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${imageCategoryLabels[image.category]?.color}`}>
+                          {imageCategoryLabels[image.category]?.label}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteImage(image)}
+                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <ProjectTimelineGallery
+                images={images}
+                onImageClick={(url) => setLightboxImage(url)}
+                onDeleteImage={handleDeleteImage}
+                imageCategoryLabels={imageCategoryLabels}
+              />
             )}
           </div>
         </div>
