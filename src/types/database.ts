@@ -1,4 +1,4 @@
-export type PropertyType = 'land' | 'house' | 'condo' | 'townhouse' | 'commercial' | 'other';
+export type PropertyType = 'land' | 'house' | 'semi_detached_house' | 'condo' | 'townhouse' | 'commercial' | 'other';
 export type AssetStatus = 'owned' | 'sold' | 'under_renovation';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ExpenseCategory = 'materials' | 'labor' | 'service' | 'electricity';
