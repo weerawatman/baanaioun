@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType } from '@/types/database';
+import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType, AssetStatus } from '@/types/database';
 import AddRenovationProjectModal from '@/components/AddRenovationProjectModal';
 import AddExpenseModal from '@/components/AddExpenseModal';
 
@@ -13,11 +13,17 @@ const statusLabels: Record<RenovationStatus, { label: string; color: string }> =
   cancelled: { label: 'ยกเลิก', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
 };
 
-const categoryLabels: Record<ExpenseCategory, { label: string; color: string }> = {
-  materials: { label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  labor: { label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  service: { label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  electricity: { label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+const categoryLabels: Record<ExpenseCategory, { label: string; color: string; group: 'general' | 'construction' }> = {
+  // General categories
+  materials: { label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', group: 'general' },
+  labor: { label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', group: 'general' },
+  service: { label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', group: 'general' },
+  electricity: { label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', group: 'general' },
+  // Construction-specific categories
+  land_filling: { label: 'ถมดิน', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', group: 'construction' },
+  building_permit: { label: 'ขออนุญาต', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', group: 'construction' },
+  foundation: { label: 'งานฐานราก', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', group: 'construction' },
+  architect_fee: { label: 'ค่าสถาปนิก', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400', group: 'construction' },
 };
 
 const projectTypeLabels: Record<ProjectType, { label: string; color: string; icon: string }> = {
@@ -195,14 +201,74 @@ function ProjectCard({
             </div>
           )}
 
+          {/* Budget vs Actual Summary */}
+          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+              งบประมาณ vs ค่าใช้จ่ายจริง
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">งบประมาณทั้งหมด</p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(project.budget)}</p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">ใช้ไปแล้ว</p>
+                <p className={`text-xl font-bold ${budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">คงเหลือ</p>
+                <p className={`text-xl font-bold ${project.budget - totalExpenses < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
+                  {formatCurrency(project.budget - totalExpenses)}
+                </p>
+              </div>
+            </div>
+            {/* Enhanced Progress Bar */}
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-600 dark:text-gray-400">ความคืบหน้าการใช้งบประมาณ</span>
+                <span className={`font-semibold ${
+                  budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' :
+                  budgetUsedPercent > 80 ? 'text-yellow-600 dark:text-yellow-400' :
+                  'text-green-600 dark:text-green-400'
+                }`}>
+                  {budgetUsedPercent.toFixed(1)}%
+                </span>
+              </div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
+                {/* Warning threshold markers */}
+                <div className="absolute top-0 left-[80%] w-px h-full bg-yellow-400 dark:bg-yellow-500 z-10" />
+                <div className="absolute top-0 left-full w-px h-full bg-red-400 dark:bg-red-500 z-10" style={{ left: '100%' }} />
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    budgetUsedPercent > 100 ? 'bg-red-500' :
+                    budgetUsedPercent > 80 ? 'bg-yellow-500' :
+                    'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min(budgetUsedPercent, 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <span>0%</span>
+                <span className="text-yellow-600 dark:text-yellow-400">80%</span>
+                <span className="text-red-600 dark:text-red-400">100%</span>
+              </div>
+            </div>
+          </div>
+
           {/* Category Summary */}
           <div className="p-6 bg-gray-50 dark:bg-gray-800/50">
             <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               สรุปค่าใช้จ่ายตามหมวดหมู่
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string }][]).map(
-                ([key, { label, color }]) => (
+
+            {/* General Categories */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">ทั่วไป</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
+                .filter(([, { group }]) => group === 'general')
+                .map(([key, { label, color }]) => (
                   <div
                     key={key}
                     className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
@@ -214,8 +280,27 @@ function ProjectCard({
                       {formatCurrency(expensesByCategory[key] || 0)}
                     </p>
                   </div>
-                )
-              )}
+                ))}
+            </div>
+
+            {/* Construction Categories */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">งานก่อสร้าง</p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
+                .filter(([, { group }]) => group === 'construction')
+                .map(([key, { label, color }]) => (
+                  <div
+                    key={key}
+                    className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                  >
+                    <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${color} mb-2`}>
+                      {label}
+                    </span>
+                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {formatCurrency(expensesByCategory[key] || 0)}
+                    </p>
+                  </div>
+                ))}
             </div>
           </div>
 
@@ -305,6 +390,8 @@ export default function RenovationsPage() {
   const [completionModal, setCompletionModal] = useState<{
     project: RenovationProjectWithAsset;
     show: boolean;
+    newAssetName: string;
+    updateAssetName: boolean;
   } | null>(null);
 
   const fetchAssets = async () => {
@@ -381,14 +468,32 @@ export default function RenovationsPage() {
         acc[exp.category as ExpenseCategory] = (acc[exp.category as ExpenseCategory] || 0) + exp.amount;
         return acc;
       },
-      { materials: 0, labor: 0, service: 0, electricity: 0 } as Record<ExpenseCategory, number>
+      {
+        materials: 0,
+        labor: 0,
+        service: 0,
+        electricity: 0,
+        land_filling: 0,
+        building_permit: 0,
+        foundation: 0,
+        architect_fee: 0,
+      } as Record<ExpenseCategory, number>
     );
   };
 
   const handleMarkComplete = (project: RenovationProjectWithAsset) => {
     // If it's a new construction project with target_property_type, show confirmation modal
     if (project.project_type === 'new_construction' && project.target_property_type) {
-      setCompletionModal({ project, show: true });
+      // Suggest a new name based on property type
+      const suggestedName = project.assets?.name
+        ? project.assets.name.replace(/ที่ดิน|Land/gi, propertyTypeLabels[project.target_property_type])
+        : `${propertyTypeLabels[project.target_property_type]} - ${project.name}`;
+      setCompletionModal({
+        project,
+        show: true,
+        newAssetName: suggestedName,
+        updateAssetName: true,
+      });
     } else {
       // Just update status to completed
       updateProjectStatus(project.id, 'completed');
@@ -411,7 +516,7 @@ export default function RenovationsPage() {
   const handleCompleteWithAssetUpdate = async (updateAsset: boolean) => {
     if (!completionModal) return;
 
-    const { project } = completionModal;
+    const { project, newAssetName, updateAssetName } = completionModal;
 
     // Update project status to completed
     const { error: projectError } = await supabase
@@ -425,11 +530,25 @@ export default function RenovationsPage() {
       return;
     }
 
-    // If user chose to update asset type
+    // If user chose to update asset
     if (updateAsset && project.target_property_type) {
+      const assetUpdate: {
+        property_type: PropertyType;
+        status: AssetStatus;
+        name?: string;
+      } = {
+        property_type: project.target_property_type,
+        status: 'owned', // Change from 'under_renovation' to 'owned' (available)
+      };
+
+      // Include name update if user wants to update it
+      if (updateAssetName && newAssetName.trim()) {
+        assetUpdate.name = newAssetName.trim();
+      }
+
       const { error: assetError } = await supabase
         .from('assets')
-        .update({ property_type: project.target_property_type })
+        .update(assetUpdate)
         .eq('id', project.asset_id);
 
       if (assetError) {
@@ -658,7 +777,7 @@ export default function RenovationsPage() {
       {/* Construction Completion Modal */}
       {completionModal?.show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md">
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg">
             <div className="p-6 border-b border-gray-200 dark:border-gray-800">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -677,20 +796,92 @@ export default function RenovationsPage() {
               </div>
             </div>
 
-            <div className="p-6">
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
-                โปรเจกต์นี้มีเป้าหมายในการเปลี่ยนประเภททรัพย์สินจาก{' '}
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {propertyTypeLabels[completionModal.project.assets?.property_type || 'land']}
-                </span>{' '}
-                เป็น{' '}
-                <span className="font-medium text-green-600 dark:text-green-400">
-                  {propertyTypeLabels[completionModal.project.target_property_type!]}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                ต้องการอัปเดตประเภททรัพย์สินโดยอัตโนมัติหรือไม่?
-              </p>
+            <div className="p-6 space-y-4">
+              {/* Asset Evolution Info */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">การเปลี่ยนแปลงทรัพย์สิน</h4>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="text-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">ประเภทเดิม</p>
+                    <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200">
+                      {propertyTypeLabels[completionModal.project.assets?.property_type || 'land']}
+                    </span>
+                  </div>
+                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  <div className="text-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">ประเภทใหม่</p>
+                    <span className="px-2 py-1 bg-green-200 dark:bg-green-900/50 rounded text-green-800 dark:text-green-200">
+                      {propertyTypeLabels[completionModal.project.target_property_type!]}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Change Info */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <h4 className="font-medium text-amber-900 dark:text-amber-300 mb-2">สถานะทรัพย์สิน</h4>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="text-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">สถานะเดิม</p>
+                    <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-800 dark:text-blue-200">
+                      กำลังปรับปรุง
+                    </span>
+                  </div>
+                  <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  <div className="text-center">
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">สถานะใหม่</p>
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded text-green-800 dark:text-green-200">
+                      พร้อมใช้งาน
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Asset Name Update */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    ชื่อทรัพย์สินใหม่
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <input
+                      type="checkbox"
+                      checked={completionModal.updateAssetName}
+                      onChange={(e) => setCompletionModal(prev => prev ? { ...prev, updateAssetName: e.target.checked } : null)}
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                    />
+                    อัปเดตชื่อ
+                  </label>
+                </div>
+                <input
+                  type="text"
+                  value={completionModal.newAssetName}
+                  onChange={(e) => setCompletionModal(prev => prev ? { ...prev, newAssetName: e.target.value } : null)}
+                  disabled={!completionModal.updateAssetName}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  placeholder="ชื่อทรัพย์สินใหม่"
+                />
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  ชื่อเดิม: {completionModal.project.assets?.name}
+                </p>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  เมื่อคลิก &quot;อัปเดตทรัพย์สิน&quot; ระบบจะ:
+                </p>
+                <ul className="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
+                  <li>เปลี่ยนประเภททรัพย์สินเป็น <strong className="text-green-600 dark:text-green-400">{propertyTypeLabels[completionModal.project.target_property_type!]}</strong></li>
+                  <li>เปลี่ยนสถานะเป็น <strong className="text-green-600 dark:text-green-400">พร้อมใช้งาน (owned)</strong></li>
+                  {completionModal.updateAssetName && completionModal.newAssetName.trim() && (
+                    <li>เปลี่ยนชื่อเป็น <strong className="text-green-600 dark:text-green-400">{completionModal.newAssetName}</strong></li>
+                  )}
+                </ul>
+              </div>
             </div>
 
             <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex gap-3">
@@ -708,8 +899,11 @@ export default function RenovationsPage() {
               </button>
               <button
                 onClick={() => handleCompleteWithAssetUpdate(true)}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
                 อัปเดตทรัพย์สิน
               </button>
             </div>

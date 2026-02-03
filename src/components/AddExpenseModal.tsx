@@ -12,11 +12,17 @@ interface AddExpenseModalProps {
   assetId: string;
 }
 
-const expenseCategories: { value: ExpenseCategory; label: string; color: string }[] = [
-  { value: 'materials', label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  { value: 'labor', label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  { value: 'service', label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-  { value: 'electricity', label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+const expenseCategories: { value: ExpenseCategory; label: string; color: string; group: 'general' | 'construction' }[] = [
+  // General categories
+  { value: 'materials', label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', group: 'general' },
+  { value: 'labor', label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', group: 'general' },
+  { value: 'service', label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', group: 'general' },
+  { value: 'electricity', label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', group: 'general' },
+  // Construction-specific categories
+  { value: 'land_filling', label: 'ถมดิน', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', group: 'construction' },
+  { value: 'building_permit', label: 'ขออนุญาต', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', group: 'construction' },
+  { value: 'foundation', label: 'งานฐานราก', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', group: 'construction' },
+  { value: 'architect_fee', label: 'ค่าสถาปนิก', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400', group: 'construction' },
 ];
 
 export default function AddExpenseModal({
@@ -113,11 +119,41 @@ export default function AddExpenseModal({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               หมวดหมู่ <span className="text-red-500">*</span>
             </label>
-            <div className="grid grid-cols-2 gap-3">
-              {expenseCategories.map(cat => (
+
+            {/* General Categories */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">ทั่วไป</p>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {expenseCategories.filter(c => c.group === 'general').map(cat => (
                 <label
                   key={cat.value}
-                  className={`flex items-center justify-center px-4 py-3 rounded-lg border-2 cursor-pointer transition-all ${
+                  className={`flex items-center justify-center px-3 py-2 rounded-lg border-2 cursor-pointer transition-all ${
+                    formData.category === cat.value
+                      ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="category"
+                    value={cat.value}
+                    checked={formData.category === cat.value}
+                    onChange={handleChange}
+                    className="sr-only"
+                  />
+                  <span className={`px-2 py-1 rounded-md text-sm font-medium ${cat.color}`}>
+                    {cat.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+
+            {/* Construction-specific Categories */}
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">งานก่อสร้าง</p>
+            <div className="grid grid-cols-2 gap-2">
+              {expenseCategories.filter(c => c.group === 'construction').map(cat => (
+                <label
+                  key={cat.value}
+                  className={`flex items-center justify-center px-3 py-2 rounded-lg border-2 cursor-pointer transition-all ${
                     formData.category === cat.value
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                       : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'

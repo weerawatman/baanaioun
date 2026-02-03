@@ -22,10 +22,16 @@ interface MonthlyData {
 }
 
 const expenseCategoryLabels: Record<ExpenseCategory, string> = {
+  // General categories
   materials: 'ค่าวัสดุ',
   labor: 'ค่าแรง',
   service: 'ค่าบริการช่าง',
   electricity: 'ค่าไฟฟ้า',
+  // Construction-specific categories
+  land_filling: 'ถมดิน',
+  building_permit: 'ขออนุญาต',
+  foundation: 'งานฐานราก',
+  architect_fee: 'ค่าสถาปนิก',
 };
 
 function formatCurrency(amount: number): string {
@@ -175,6 +181,10 @@ export default function ReportsPage() {
       labor: 0,
       service: 0,
       electricity: 0,
+      land_filling: 0,
+      building_permit: 0,
+      foundation: 0,
+      architect_fee: 0,
     };
 
     expenses.forEach(e => {
@@ -376,6 +386,10 @@ export default function ReportsPage() {
                     labor: 'bg-green-500',
                     service: 'bg-purple-500',
                     electricity: 'bg-yellow-500',
+                    land_filling: 'bg-amber-500',
+                    building_permit: 'bg-indigo-500',
+                    foundation: 'bg-orange-500',
+                    architect_fee: 'bg-pink-500',
                   };
 
                   return (

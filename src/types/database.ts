@@ -1,7 +1,15 @@
 export type PropertyType = 'land' | 'house' | 'semi_detached_house' | 'condo' | 'townhouse' | 'commercial' | 'other';
 export type AssetStatus = 'owned' | 'sold' | 'under_renovation';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
-export type ExpenseCategory = 'materials' | 'labor' | 'service' | 'electricity';
+export type ExpenseCategory =
+  | 'materials'
+  | 'labor'
+  | 'service'
+  | 'electricity'
+  | 'land_filling'
+  | 'building_permit'
+  | 'foundation'
+  | 'architect_fee';
 export type ImageCategory = 'purchase' | 'before_renovation' | 'after_renovation';
 export type ProjectType = 'renovation' | 'new_construction';
 
