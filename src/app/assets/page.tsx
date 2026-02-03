@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { Asset, PropertyType } from '@/types/database';
 import AddAssetModal from '@/components/AddAssetModal';
 
+export const runtime = 'edge';
+
 const propertyTypeLabels: Record<PropertyType, string> = {
   land: 'ที่ดินเปล่า',
   house: 'บ้านเดี่ยว',
