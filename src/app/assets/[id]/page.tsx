@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase';
 import { Asset, AssetImage, PropertyType, ImageCategory } from '@/types/database';
 import Link from 'next/link';
 
+export const runtime = 'edge';
+
 const propertyTypeLabels: Record<PropertyType, string> = {
   land: 'ที่ดินเปล่า',
   house: 'บ้านเดี่ยว',
