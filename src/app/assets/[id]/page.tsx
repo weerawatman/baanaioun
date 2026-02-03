@@ -9,7 +9,7 @@ import Link from 'next/link';
 const propertyTypeLabels: Record<PropertyType, string> = {
   land: 'ที่ดินเปล่า',
   house: 'บ้านเดี่ยว',
-  semi_detahed_house: 'บ้านแฝด',
+  semi_detached_house: 'บ้านแฝด',
   condo: 'คอนโดมิเนียม',
   townhouse: 'ทาวน์เฮาส์',
   commercial: 'อาคารพาณิชย์',
