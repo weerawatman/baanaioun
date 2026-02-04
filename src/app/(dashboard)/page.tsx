@@ -4,10 +4,10 @@ export default function Home() {
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50 mb-6">
-        Welcome to Baanaioun
+        ยินดีต้อนรับสู่ Baanaioun
       </h1>
       <p className="text-warm-600 dark:text-warm-400 mb-8">
-        Your property renovation and management tracker.
+        ระบบจัดการทรัพย์สินและติดตามการก่อสร้าง/รีโนเวท
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -16,10 +16,10 @@ export default function Home() {
           className="block p-6 bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 hover:shadow-md transition-shadow"
         >
           <h2 className="text-xl font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            Assets
+            ทรัพย์สิน
           </h2>
           <p className="text-warm-600 dark:text-warm-400">
-            Manage your properties and track their value.
+            จัดการทรัพย์สินและติดตามมูลค่า
           </p>
         </Link>
 
@@ -28,10 +28,10 @@ export default function Home() {
           className="block p-6 bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 hover:shadow-md transition-shadow"
         >
           <h2 className="text-xl font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            Renovations
+            ก่อสร้าง/รีโนเวท
           </h2>
           <p className="text-warm-600 dark:text-warm-400">
-            Track renovation projects and their progress.
+            ติดตามโครงการก่อสร้างและรีโนเวท
           </p>
         </Link>
 
@@ -40,10 +40,10 @@ export default function Home() {
           className="block p-6 bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 hover:shadow-md transition-shadow"
         >
           <h2 className="text-xl font-semibold text-warm-900 dark:text-warm-50 mb-2">
-            Reports
+            รายงาน
           </h2>
           <p className="text-warm-600 dark:text-warm-400">
-            View financial reports and analytics.
+            ดูรายงานการเงินและวิเคราะห์ข้อมูล
           </p>
         </Link>
       </div>
