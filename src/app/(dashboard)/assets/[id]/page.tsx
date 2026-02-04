@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Asset, AssetImage, PropertyType, ImageCategory, RenovationProject } from '@/types/database';
+import { Asset, AssetImage, PropertyType, AssetStatus, ImageCategory, RenovationProject } from '@/types/database';
 import ProjectTimelineGallery from '@/components/ProjectTimelineGallery';
 import Link from 'next/link';
 
@@ -17,6 +17,14 @@ const propertyTypeLabels: Record<PropertyType, string> = {
   townhouse: 'ทาวน์เฮาส์',
   commercial: 'อาคารพาณิชย์',
   other: 'อื่นๆ',
+};
+
+const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> = {
+  developing:     { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  ready_for_sale: { label: 'พร้อมขาย',       color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  ready_for_rent: { label: 'พร้อมเช่า',       color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  rented:         { label: 'มีคนเช่าอยู่',    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  sold:           { label: 'ขายไปแล้ว',       color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
 };
 
 const imageCategoryLabels: Record<ImageCategory, { label: string; color: string }> = {
@@ -262,7 +270,12 @@ export default function AssetDetailPage() {
         </Link>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">{asset.name}</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">{asset.name}</h1>
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
+                {assetStatusLabels[asset.status]?.label}
+              </span>
+            </div>
             <p className="text-warm-600 dark:text-warm-400 mt-1">
               เลขที่โฉนด: {asset.title_deed_number} | {propertyTypeLabels[asset.property_type]}
             </p>

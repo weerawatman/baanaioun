@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PropertyType } from '@/types/database';
+import { PropertyType, AssetStatus } from '@/types/database';
 import MapPickerDynamic from './MapPickerDynamic';
 
 interface AddAssetModalProps {
@@ -21,6 +21,14 @@ const propertyTypes: { value: PropertyType; label: string; icon: string }[] = [
   { value: 'other', label: 'อื่นๆ', icon: '📦' },
 ];
 
+const statusOptions: { value: AssetStatus; label: string }[] = [
+  { value: 'developing', label: 'ว่างรอการพัฒนา' },
+  { value: 'ready_for_sale', label: 'พร้อมขาย' },
+  { value: 'ready_for_rent', label: 'พร้อมเช่า' },
+  { value: 'rented', label: 'มีคนเช่าอยู่' },
+  { value: 'sold', label: 'ขายไปแล้ว' },
+];
+
 export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +38,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
     name: '',
     address: '',
     property_type: 'land' as PropertyType,
+    status: 'developing' as AssetStatus,
     purchase_price: '',
     appraised_value: '',
     mortgage_bank: '',
@@ -64,7 +73,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         land_tax_due_date: formData.land_tax_due_date || null,
         location_lat_long: formData.location_lat_long || null,
         notes: formData.notes || null,
-        status: 'owned',
+        status: formData.status,
       });
 
       if (insertError) throw insertError;
@@ -74,6 +83,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         name: '',
         address: '',
         property_type: 'land',
+        status: 'developing',
         purchase_price: '',
         appraised_value: '',
         mortgage_bank: '',
@@ -188,6 +198,23 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* สถานะ */}
+              <div>
+                <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
+                  สถานะ
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                >
+                  {statusOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
 
               {/* ที่อยู่ */}

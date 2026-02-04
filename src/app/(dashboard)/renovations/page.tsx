@@ -538,7 +538,7 @@ export default function RenovationsPage() {
         name?: string;
       } = {
         property_type: project.target_property_type,
-        status: 'owned', // Change from 'under_renovation' to 'owned' (available)
+        status: 'ready_for_sale', // Mark as ready for sale after renovation/construction completes
       };
 
       // Include name update if user wants to update it

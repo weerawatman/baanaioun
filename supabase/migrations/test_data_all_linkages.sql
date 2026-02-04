@@ -3,7 +3,7 @@
 -- รัน SQL นี้ใน Supabase SQL Editor
 -- ============================================================
 -- ครอบคลุม:
---   1. Assets (ทุกสถานะ: owned, under_renovation, available, sold)
+--   1. Assets (ทุกสถานะ: developing, ready_for_sale, ready_for_rent, rented, sold)
 --   2. Renovation Projects → Assets (ทั้ง renovation & new_construction)
 --   3. Expenses → Assets + Renovation Projects (ทุก category)
 --   4. Incomes → Assets
@@ -22,6 +22,11 @@ ADD COLUMN IF NOT EXISTS renovation_project_id UUID REFERENCES renovation_projec
 -- สร้าง index สำหรับ query ตาม project
 CREATE INDEX IF NOT EXISTS idx_asset_images_project_id ON asset_images(renovation_project_id);
 
+-- อัพเดท constraint สถานะทรัพย์สิน (ใช้ค่าใหม่)
+ALTER TABLE assets DROP CONSTRAINT IF EXISTS assets_status_check;
+ALTER TABLE assets ADD CONSTRAINT assets_status_check
+CHECK (status IN ('developing', 'ready_for_sale', 'ready_for_rent', 'rented', 'sold'));
+
 -- อัพเดท constraint หมวดหมู่รูปภาพ (เพิ่ม in_progress, final)
 ALTER TABLE asset_images DROP CONSTRAINT IF EXISTS asset_images_category_check;
 ALTER TABLE asset_images ADD CONSTRAINT asset_images_category_check
@@ -36,7 +41,7 @@ SELECT
   id, name, property_type, address, description,
   selling_price, rental_price, location_lat_long, status, created_at
 FROM assets
-WHERE status = 'available';
+WHERE status IN ('ready_for_sale', 'ready_for_rent');
 
 GRANT SELECT ON public_assets TO anon;
 
@@ -50,7 +55,7 @@ SELECT
   ai.is_primary, ai.category, ai.created_at
 FROM asset_images ai
 INNER JOIN assets a ON a.id = ai.asset_id
-WHERE a.status = 'available';
+WHERE a.status IN ('ready_for_sale', 'ready_for_rent');
 
 GRANT SELECT ON public_asset_images TO anon;
 
@@ -68,7 +73,7 @@ DELETE FROM assets WHERE title_deed_number LIKE 'TEST-%';
 -- 1. สร้างทรัพย์สิน (ASSETS) - 5 รายการ ครบทุกสถานะ
 -- ============================================================
 
--- ASSET 1: บ้านเดี่ยว - สถานะ "available" (พร้อมขาย/เช่า)
+-- ASSET 1: บ้านเดี่ยว - สถานะ "ready_for_sale" (พร้อมขาย)
 INSERT INTO assets (
   asset_code, title_deed_number, name, address, property_type,
   purchase_price, purchase_date, appraised_value,
@@ -82,13 +87,13 @@ INSERT INTO assets (
   'house',
   3000000, '2024-01-15', 3800000,
   'ธนาคารกสิกรไทย', 2000000, '2026-12-31',
-  '2026-04-30', 'available', 'บ้านปรับปรุงใหม่ทั้งหลัง พร้อมขาย',
+  '2026-04-30', 'ready_for_sale', 'บ้านปรับปรุงใหม่ทั้งหลัง พร้อมขาย',
   3500000, 15000,
   'บ้านเดี่ยว 2 ชั้น สภาพดี พร้อมอยู่ 3 ห้องนอน 2 ห้องน้ำ พื้นที่ 150 ตร.ม. ใกล้ BTS อ่อนนุช',
   '13.6904,100.6089'
 );
 
--- ASSET 2: คอนโด - สถานะ "available" (พร้อมขาย/เช่า)
+-- ASSET 2: คอนโด - สถานะ "ready_for_rent" (พร้อมเช่า)
 INSERT INTO assets (
   asset_code, title_deed_number, name, address, property_type,
   purchase_price, purchase_date, appraised_value,
@@ -99,12 +104,12 @@ INSERT INTO assets (
   '456 ถนนพระราม 4 แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110',
   'condo',
   2500000, '2024-02-01', 3000000,
-  'available', 2800000, 12000,
+  'ready_for_rent', 2800000, 12000,
   'คอนโด 1 ห้องนอน ชั้น 25 วิวเมือง ตกแต่งครบ ใกล้ MRT ควีนสิริกิติ์',
   '13.7308,100.5618'
 );
 
--- ASSET 3: ที่ดิน - สถานะ "under_renovation" (กำลังสร้างบ้าน)
+-- ASSET 3: ที่ดิน - สถานะ "developing" (กำลังพัฒนา)
 INSERT INTO assets (
   asset_code, title_deed_number, name, address, property_type,
   purchase_price, purchase_date, appraised_value,
@@ -115,11 +120,11 @@ INSERT INTO assets (
   '789 ถนนรังสิต-นครนายก ตำบลบึงยี่โถ อำเภอธัญบุรี จังหวัดปทุมธานี 12110',
   'land',
   5000000, '2024-06-01', 6000000,
-  'under_renovation', 'กำลังสร้างบ้านบนที่ดิน',
+  'developing', 'กำลังสร้างบ้านบนที่ดิน',
   '14.0208,100.6850'
 );
 
--- ASSET 4: ทาวน์เฮ้าส์ - สถานะ "owned" (ถือครอง)
+-- ASSET 4: ทาวน์เฮ้าส์ - สถานะ "rented" (มีคนเช่าอยู่)
 INSERT INTO assets (
   asset_code, title_deed_number, name, address, property_type,
   purchase_price, purchase_date, appraised_value,
@@ -133,7 +138,7 @@ INSERT INTO assets (
   'townhouse',
   1800000, '2023-08-15', 2200000,
   'ธนาคารกรุงเทพ', 1200000, '2026-08-15',
-  '2026-04-30', 'owned', 'ให้เช่าอยู่ สัญญา 1 ปี'
+  '2026-04-30', 'rented', 'ให้เช่าอยู่ สัญญา 1 ปี'
 );
 
 -- ASSET 5: อาคารพาณิชย์ - สถานะ "sold" (ขายแล้ว)
@@ -546,7 +551,7 @@ WHERE a.title_deed_number = 'TEST-005';
 -- 6. สร้างลูกค้าสนใจ (LEADS) → เชื่อม Assets
 -- ============================================================
 
--- Leads สำหรับบ้าน TEST-001 (available)
+-- Leads สำหรับบ้าน TEST-001 (ready_for_sale)
 INSERT INTO leads (asset_id, customer_name, customer_phone, customer_line_id, message)
 SELECT id, 'สมศักดิ์ ใจดี', '081-234-5678', 'somsak.j', 'สนใจซื้อบ้านครับ อยากนัดดูบ้านวันเสาร์ได้ไหม?'
 FROM assets WHERE title_deed_number = 'TEST-001';
@@ -559,7 +564,7 @@ INSERT INTO leads (asset_id, customer_name, customer_phone, customer_line_id, me
 SELECT id, 'วิชัย เจริญสุข', '092-345-6789', NULL, 'อยากทราบราคาต่อรองได้ไหมครับ ถ้าจ่ายเงินสดหมด'
 FROM assets WHERE title_deed_number = 'TEST-001';
 
--- Leads สำหรับคอนโด TEST-002 (available)
+-- Leads สำหรับคอนโด TEST-002 (ready_for_rent)
 INSERT INTO leads (asset_id, customer_name, customer_phone, customer_line_id, message)
 SELECT id, 'นภา ศรีสมบูรณ์', '086-111-2222', 'napa.sri', 'สนใจเช่าคอนโดค่ะ ทำงานใกล้ MRT ศูนย์สิริกิติ์'
 FROM assets WHERE title_deed_number = 'TEST-002';
@@ -568,7 +573,7 @@ INSERT INTO leads (asset_id, customer_name, customer_phone, customer_line_id, me
 SELECT id, 'John Smith', '095-999-8888', 'john.bkk', 'Interested in buying. Can I schedule a viewing?'
 FROM assets WHERE title_deed_number = 'TEST-002';
 
--- Lead สำหรับที่ดิน TEST-003 (under_renovation แต่มีคนสนใจ)
+-- Lead สำหรับที่ดิน TEST-003 (developing แต่มีคนสนใจ)
 INSERT INTO leads (asset_id, customer_name, customer_phone, customer_line_id, message)
 SELECT id, 'ธนา อัครเศรษฐ์', '081-555-6666', 'thana.a', 'สนใจซื้อบ้านหลังสร้างเสร็จครับ ช่วยแจ้งเมื่อพร้อมขายด้วย'
 FROM assets WHERE title_deed_number = 'TEST-003';
@@ -677,7 +682,7 @@ ORDER BY a.title_deed_number;
 -- สำเร็จ!
 -- ============================================================
 -- ข้อมูลทดสอบครบทุก linkage:
---   5 Assets (owned, under_renovation, available x2, sold)
+--   5 Assets (developing, ready_for_sale, ready_for_rent, rented, sold)
 --   6 Renovation Projects (planned, in_progress, completed, cancelled)
 --   20 Expenses (ทุก category, เชื่อม asset + project)
 --   14 Incomes (rent, sale, deposit)

@@ -1,5 +1,5 @@
 export type PropertyType = 'land' | 'house' | 'semi_detached_house' | 'condo' | 'townhouse' | 'commercial' | 'other';
-export type AssetStatus = 'owned' | 'sold' | 'under_renovation' | 'available';
+export type AssetStatus = 'developing' | 'ready_for_sale' | 'ready_for_rent' | 'rented' | 'sold';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ExpenseCategory =
   | 'materials'
@@ -96,7 +96,7 @@ export interface PublicAsset {
   selling_price?: number | null;
   rental_price?: number | null;
   location_lat_long?: string | null;
-  status: 'available';
+  status: 'ready_for_sale' | 'ready_for_rent';
 }
 
 export interface Lead {

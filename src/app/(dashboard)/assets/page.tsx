@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { Asset, PropertyType } from '@/types/database';
+import { Asset, PropertyType, AssetStatus } from '@/types/database';
 import AddAssetModal from '@/components/AddAssetModal';
 
 export const runtime = 'edge';
@@ -16,6 +16,14 @@ const propertyTypeLabels: Record<PropertyType, { label: string; icon: string }> 
   townhouse: { label: 'ทาวน์เฮาส์', icon: '🏡' },
   commercial: { label: 'อาคารพาณิชย์', icon: '🏬' },
   other: { label: 'อื่นๆ', icon: '📦' },
+};
+
+const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> = {
+  developing:     { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  ready_for_sale: { label: 'พร้อมขาย',       color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  ready_for_rent: { label: 'พร้อมเช่า',       color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  rented:         { label: 'มีคนเช่าอยู่',    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  sold:           { label: 'ขายไปแล้ว',       color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
 };
 
 function formatCurrency(amount: number): string {
@@ -133,6 +141,13 @@ export default function AssetsPage() {
                   </span>
                 </div>
 
+                {/* Status Badge */}
+                <div className="mb-3">
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
+                    {assetStatusLabels[asset.status]?.label}
+                  </span>
+                </div>
+
                 {/* Price Info */}
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <div className="bg-warm-50 dark:bg-warm-800/50 rounded-xl p-3">
@@ -199,6 +214,9 @@ export default function AssetsPage() {
                       ชื่อ/ประเภท
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
+                      สถานะ
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
                       ราคาซื้อ
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
@@ -237,6 +255,11 @@ export default function AssetsPage() {
                             </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
+                          {assetStatusLabels[asset.status]?.label}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-warm-900 dark:text-warm-50">
                         {formatCurrency(asset.purchase_price)}
