@@ -7,7 +7,7 @@ import AddRenovationProjectModal from '@/components/AddRenovationProjectModal';
 import AddExpenseModal from '@/components/AddExpenseModal';
 
 const statusLabels: Record<RenovationStatus, { label: string; color: string }> = {
-  planned: { label: 'วางแผน', color: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' },
+  planned: { label: 'วางแผน', color: 'bg-warm-100 text-warm-800 dark:bg-warm-700 dark:text-warm-300' },
   in_progress: { label: 'กำลังดำเนินการ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
   completed: { label: 'เสร็จสิ้น', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
   cancelled: { label: 'ยกเลิก', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
@@ -85,16 +85,16 @@ function ProjectCard({
   onAddExpense,
 }: ProjectCardProps) {
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 overflow-hidden">
       {/* Project Header */}
       <div
-        className="p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+        className="p-6 cursor-pointer hover:bg-warm-50 dark:hover:bg-warm-800/50 transition-colors"
         onClick={onToggle}
       >
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                 {project.name}
               </h3>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${projectTypeLabels[project.project_type || 'renovation'].color}`}>
@@ -109,24 +109,24 @@ function ProjectCard({
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <p className="text-sm text-warm-500 dark:text-warm-400 mb-2">
               {project.assets?.name} ({project.assets?.title_deed_number})
             </p>
             {project.description && (
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-warm-600 dark:text-warm-400">
                 {project.description}
               </p>
             )}
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <p className="text-sm text-gray-500 dark:text-gray-400">งบประมาณ</p>
-              <p className="text-lg font-semibold text-gray-900 dark:text-white">
+              <p className="text-sm text-warm-500 dark:text-warm-400">งบประมาณ</p>
+              <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                 {formatCurrency(project.budget)}
               </p>
             </div>
             <svg
-              className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+              className={`w-5 h-5 text-warm-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -139,12 +139,12 @@ function ProjectCard({
         {/* Budget Progress */}
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-500 dark:text-gray-400">ใช้ไปแล้ว</span>
-            <span className={`font-medium ${budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}`}>
+            <span className="text-warm-500 dark:text-warm-400">ใช้ไปแล้ว</span>
+            <span className={`font-medium ${budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' : 'text-warm-900 dark:text-warm-50'}`}>
               {formatCurrency(totalExpenses)} ({budgetUsedPercent.toFixed(1)}%)
             </span>
           </div>
-          <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-2 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all ${
                 budgetUsedPercent > 100
@@ -159,7 +159,7 @@ function ProjectCard({
         </div>
 
         {/* Date Range */}
-        <div className="mt-3 flex gap-4 text-sm text-gray-500 dark:text-gray-400">
+        <div className="mt-3 flex gap-4 text-sm text-warm-500 dark:text-warm-400">
           <span>เริ่ม: {formatDate(project.start_date)}</span>
           {project.end_date && <span>สิ้นสุด: {formatDate(project.end_date)}</span>}
         </div>
@@ -167,16 +167,16 @@ function ProjectCard({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-gray-800">
+        <div className="border-t border-warm-200 dark:border-warm-800">
           {/* Action Buttons */}
           {project.status !== 'completed' && project.status !== 'cancelled' && (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex gap-2">
+            <div className="p-4 bg-warm-50 dark:bg-warm-800/50 border-b border-warm-200 dark:border-warm-700 flex gap-2">
               <button
                 onClick={e => {
                   e.stopPropagation();
                   onMarkComplete();
                 }}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -189,7 +189,7 @@ function ProjectCard({
                     e.stopPropagation();
                     onStartProgress();
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors flex items-center gap-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
@@ -202,32 +202,32 @@ function ProjectCard({
           )}
 
           {/* Budget vs Actual Summary */}
-          <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-b border-gray-200 dark:border-gray-700">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+          <div className="p-6 bg-gradient-to-r from-primary-50 to-gold-50 dark:from-primary-900/20 dark:to-gold-900/20 border-b border-warm-200 dark:border-warm-700">
+            <h4 className="text-sm font-medium text-warm-700 dark:text-warm-300 mb-4">
               งบประมาณ vs ค่าใช้จ่ายจริง
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">งบประมาณทั้งหมด</p>
-                <p className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(project.budget)}</p>
+              <div className="bg-white dark:bg-warm-900 rounded-xl p-4 border border-warm-200 dark:border-warm-700">
+                <p className="text-xs text-warm-500 dark:text-warm-400 mb-1">งบประมาณทั้งหมด</p>
+                <p className="text-xl font-bold text-warm-900 dark:text-warm-50">{formatCurrency(project.budget)}</p>
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">ใช้ไปแล้ว</p>
-                <p className={`text-xl font-bold ${budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+              <div className="bg-white dark:bg-warm-900 rounded-xl p-4 border border-warm-200 dark:border-warm-700">
+                <p className="text-xs text-warm-500 dark:text-warm-400 mb-1">ใช้ไปแล้ว</p>
+                <p className={`text-xl font-bold ${budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' : 'text-primary-500 dark:text-primary-400'}`}>
                   {formatCurrency(totalExpenses)}
                 </p>
               </div>
-              <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">คงเหลือ</p>
+              <div className="bg-white dark:bg-warm-900 rounded-xl p-4 border border-warm-200 dark:border-warm-700">
+                <p className="text-xs text-warm-500 dark:text-warm-400 mb-1">คงเหลือ</p>
                 <p className={`text-xl font-bold ${project.budget - totalExpenses < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'}`}>
                   {formatCurrency(project.budget - totalExpenses)}
                 </p>
               </div>
             </div>
             {/* Enhanced Progress Bar */}
-            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-warm-900 rounded-xl p-4 border border-warm-200 dark:border-warm-700">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-600 dark:text-gray-400">ความคืบหน้าการใช้งบประมาณ</span>
+                <span className="text-warm-600 dark:text-warm-400">ความคืบหน้าการใช้งบประมาณ</span>
                 <span className={`font-semibold ${
                   budgetUsedPercent > 100 ? 'text-red-600 dark:text-red-400' :
                   budgetUsedPercent > 80 ? 'text-yellow-600 dark:text-yellow-400' :
@@ -236,7 +236,7 @@ function ProjectCard({
                   {budgetUsedPercent.toFixed(1)}%
                 </span>
               </div>
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative">
+              <div className="h-4 bg-warm-200 dark:bg-warm-700 rounded-full overflow-hidden relative">
                 {/* Warning threshold markers */}
                 <div className="absolute top-0 left-[80%] w-px h-full bg-yellow-400 dark:bg-yellow-500 z-10" />
                 <div className="absolute top-0 left-full w-px h-full bg-red-400 dark:bg-red-500 z-10" style={{ left: '100%' }} />
@@ -249,7 +249,7 @@ function ProjectCard({
                   style={{ width: `${Math.min(budgetUsedPercent, 100)}%` }}
                 />
               </div>
-              <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="flex justify-between text-xs text-warm-500 dark:text-warm-400 mt-1">
                 <span>0%</span>
                 <span className="text-yellow-600 dark:text-yellow-400">80%</span>
                 <span className="text-red-600 dark:text-red-400">100%</span>
@@ -258,25 +258,25 @@ function ProjectCard({
           </div>
 
           {/* Category Summary */}
-          <div className="p-6 bg-gray-50 dark:bg-gray-800/50">
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+          <div className="p-6 bg-warm-50 dark:bg-warm-800/50">
+            <h4 className="text-sm font-medium text-warm-700 dark:text-warm-300 mb-3">
               สรุปค่าใช้จ่ายตามหมวดหมู่
             </h4>
 
             {/* General Categories */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">ทั่วไป</p>
+            <p className="text-xs text-warm-500 dark:text-warm-400 mb-2">ทั่วไป</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
                 .filter(([, { group }]) => group === 'general')
                 .map(([key, { label, color }]) => (
                   <div
                     key={key}
-                    className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-warm-900 rounded-xl p-3 border border-warm-200 dark:border-warm-700"
                   >
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${color} mb-2`}>
                       {label}
                     </span>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                       {formatCurrency(expensesByCategory[key] || 0)}
                     </p>
                   </div>
@@ -284,19 +284,19 @@ function ProjectCard({
             </div>
 
             {/* Construction Categories */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">งานก่อสร้าง</p>
+            <p className="text-xs text-warm-500 dark:text-warm-400 mb-2">งานก่อสร้าง</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
                 .filter(([, { group }]) => group === 'construction')
                 .map(([key, { label, color }]) => (
                   <div
                     key={key}
-                    className="bg-white dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                    className="bg-white dark:bg-warm-900 rounded-xl p-3 border border-warm-200 dark:border-warm-700"
                   >
                     <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${color} mb-2`}>
                       {label}
                     </span>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <p className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                       {formatCurrency(expensesByCategory[key] || 0)}
                     </p>
                   </div>
@@ -307,7 +307,7 @@ function ProjectCard({
           {/* Expenses List */}
           <div className="p-6">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <h4 className="text-sm font-medium text-warm-700 dark:text-warm-300">
                 รายการค่าใช้จ่าย
               </h4>
               <button
@@ -315,7 +315,7 @@ function ProjectCard({
                   e.stopPropagation();
                   onAddExpense();
                 }}
-                className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                className="px-3 py-1.5 text-sm bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -325,10 +325,10 @@ function ProjectCard({
             </div>
 
             {!expenses[project.id] ? (
-              <p className="text-center text-gray-500 dark:text-gray-400 py-4">กำลังโหลด...</p>
+              <p className="text-center text-warm-500 dark:text-warm-400 py-4">กำลังโหลด...</p>
             ) : expenses[project.id].length === 0 ? (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <svg className="w-12 h-12 mx-auto mb-2 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="text-center py-8 text-warm-500 dark:text-warm-400">
+                <svg className="w-12 h-12 mx-auto mb-2 text-warm-300 dark:text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
                 </svg>
                 <p>ยังไม่มีรายการค่าใช้จ่าย</p>
@@ -337,7 +337,7 @@ function ProjectCard({
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    <tr className="text-left text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
                       <th className="pb-3">วันที่</th>
                       <th className="pb-3">หมวดหมู่</th>
                       <th className="pb-3">รายละเอียด</th>
@@ -345,24 +345,24 @@ function ProjectCard({
                       <th className="pb-3 text-right">จำนวนเงิน</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  <tbody className="divide-y divide-warm-200 dark:divide-warm-700">
                     {expenses[project.id].map(expense => (
                       <tr key={expense.id} className="text-sm">
-                        <td className="py-3 text-gray-600 dark:text-gray-400">
+                        <td className="py-3 text-warm-600 dark:text-warm-400">
                           {formatDate(expense.date)}
                         </td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${categoryLabels[expense.category as ExpenseCategory]?.color || 'bg-gray-100 text-gray-800'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${categoryLabels[expense.category as ExpenseCategory]?.color || 'bg-warm-100 text-warm-800'}`}>
                             {categoryLabels[expense.category as ExpenseCategory]?.label || expense.category}
                           </span>
                         </td>
-                        <td className="py-3 text-gray-900 dark:text-white">
+                        <td className="py-3 text-warm-900 dark:text-warm-50">
                           {expense.description || '-'}
                         </td>
-                        <td className="py-3 text-gray-600 dark:text-gray-400">
+                        <td className="py-3 text-warm-600 dark:text-warm-400">
                           {expense.vendor || '-'}
                         </td>
-                        <td className="py-3 text-right font-medium text-gray-900 dark:text-white">
+                        <td className="py-3 text-right font-medium text-warm-900 dark:text-warm-50">
                           {formatCurrency(expense.amount)}
                         </td>
                       </tr>
@@ -569,14 +569,14 @@ export default function RenovationsPage() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">โปรเจกต์ก่อสร้างและปรับปรุง</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
+          <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">โปรเจกต์ก่อสร้างและปรับปรุง</h1>
+          <p className="text-warm-600 dark:text-warm-400 mt-1">
             จัดการโปรเจกต์สร้างใหม่และปรับปรุง พร้อมติดตามค่าใช้จ่าย
           </p>
         </div>
         <button
           onClick={() => setIsProjectModalOpen(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -589,17 +589,17 @@ export default function RenovationsPage() {
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setFilterType('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+          className={`px-4 py-2 rounded-xl font-medium transition-colors ${
             filterType === 'all'
-              ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700'
+              ? 'bg-warm-900 text-white dark:bg-white dark:text-warm-900'
+              : 'bg-warm-100 text-warm-600 hover:bg-warm-200 dark:bg-warm-800 dark:text-warm-400 dark:hover:bg-warm-700'
           }`}
         >
           ทั้งหมด ({projects.length})
         </button>
         <button
           onClick={() => setFilterType('new_construction')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${
             filterType === 'new_construction'
               ? 'bg-green-600 text-white'
               : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'
@@ -610,10 +610,10 @@ export default function RenovationsPage() {
         </button>
         <button
           onClick={() => setFilterType('renovation')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+          className={`px-4 py-2 rounded-xl font-medium transition-colors flex items-center gap-2 ${
             filterType === 'renovation'
-              ? 'bg-blue-600 text-white'
-              : 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50'
+              ? 'bg-primary-500 text-white'
+              : 'bg-primary-100 text-primary-700 hover:bg-primary-200 dark:bg-primary-900/30 dark:text-primary-400 dark:hover:bg-primary-900/50'
           }`}
         >
           <span>🔧</span>
@@ -622,15 +622,15 @@ export default function RenovationsPage() {
       </div>
 
       {loading ? (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+        <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
+          <div className="p-6 text-center text-warm-500 dark:text-warm-400">
             <p>กำลังโหลด...</p>
           </div>
         </div>
       ) : filteredProjects.length === 0 ? (
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
-            <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
+          <div className="p-6 text-center text-warm-500 dark:text-warm-400">
+            <svg className="w-16 h-16 mx-auto mb-4 text-warm-300 dark:text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
             <p className="text-lg font-medium mb-2">
@@ -646,7 +646,7 @@ export default function RenovationsPage() {
           {filteredProjects.filter(p => p.project_type === 'new_construction').length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-100 dark:bg-green-900/30 rounded-xl">
                   <span className="text-lg">🏗️</span>
                   <h2 className="text-lg font-semibold text-green-800 dark:text-green-400">
                     โปรเจกต์สร้างใหม่ (New Construction)
@@ -687,12 +687,12 @@ export default function RenovationsPage() {
           {filteredProjects.filter(p => p.project_type === 'renovation' || !p.project_type).length > 0 && (
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-100 dark:bg-primary-900/30 rounded-xl">
                   <span className="text-lg">🔧</span>
-                  <h2 className="text-lg font-semibold text-blue-800 dark:text-blue-400">
+                  <h2 className="text-lg font-semibold text-primary-700 dark:text-primary-400">
                     โปรเจกต์ปรับปรุง (Renovation)
                   </h2>
-                  <span className="px-2 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-200 rounded-full text-sm font-medium">
+                  <span className="px-2 py-0.5 bg-primary-200 dark:bg-primary-800 text-primary-900 dark:text-primary-200 rounded-full text-sm font-medium">
                     {filteredProjects.filter(p => p.project_type === 'renovation' || !p.project_type).length}
                   </span>
                 </div>
@@ -777,8 +777,8 @@ export default function RenovationsPage() {
       {/* Construction Completion Modal */}
       {completionModal?.show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-lg">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-800">
+          <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-xl w-full max-w-lg">
+            <div className="p-6 border-b border-warm-200 dark:border-warm-800">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -786,10 +786,10 @@ export default function RenovationsPage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-xl font-semibold text-warm-900 dark:text-warm-50">
                     โปรเจกต์สร้างใหม่เสร็จสิ้น
                   </h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <p className="text-sm text-warm-500 dark:text-warm-400">
                     {completionModal.project.name}
                   </p>
                 </div>
@@ -798,12 +798,12 @@ export default function RenovationsPage() {
 
             <div className="p-6 space-y-4">
               {/* Asset Evolution Info */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                 <h4 className="font-medium text-blue-900 dark:text-blue-300 mb-2">การเปลี่ยนแปลงทรัพย์สิน</h4>
                 <div className="flex items-center gap-3 text-sm">
                   <div className="text-center">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">ประเภทเดิม</p>
-                    <span className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded text-gray-800 dark:text-gray-200">
+                    <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">ประเภทเดิม</p>
+                    <span className="px-2 py-1 bg-warm-200 dark:bg-warm-700 rounded text-warm-800 dark:text-warm-200">
                       {propertyTypeLabels[completionModal.project.assets?.property_type || 'land']}
                     </span>
                   </div>
@@ -811,7 +811,7 @@ export default function RenovationsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                   <div className="text-center">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">ประเภทใหม่</p>
+                    <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">ประเภทใหม่</p>
                     <span className="px-2 py-1 bg-green-200 dark:bg-green-900/50 rounded text-green-800 dark:text-green-200">
                       {propertyTypeLabels[completionModal.project.target_property_type!]}
                     </span>
@@ -820,11 +820,11 @@ export default function RenovationsPage() {
               </div>
 
               {/* Status Change Info */}
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                 <h4 className="font-medium text-amber-900 dark:text-amber-300 mb-2">สถานะทรัพย์สิน</h4>
                 <div className="flex items-center gap-3 text-sm">
                   <div className="text-center">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">สถานะเดิม</p>
+                    <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">สถานะเดิม</p>
                     <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900/30 rounded text-blue-800 dark:text-blue-200">
                       กำลังปรับปรุง
                     </span>
@@ -833,7 +833,7 @@ export default function RenovationsPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                   <div className="text-center">
-                    <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">สถานะใหม่</p>
+                    <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">สถานะใหม่</p>
                     <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 rounded text-green-800 dark:text-green-200">
                       พร้อมใช้งาน
                     </span>
@@ -844,15 +844,15 @@ export default function RenovationsPage() {
               {/* Asset Name Update */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="block text-sm font-medium text-warm-700 dark:text-warm-300">
                     ชื่อทรัพย์สินใหม่
                   </label>
-                  <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <label className="flex items-center gap-2 text-sm text-warm-600 dark:text-warm-400">
                     <input
                       type="checkbox"
                       checked={completionModal.updateAssetName}
                       onChange={(e) => setCompletionModal(prev => prev ? { ...prev, updateAssetName: e.target.checked } : null)}
-                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-warm-300 dark:border-warm-600 text-primary-500 focus:ring-primary-500"
                     />
                     อัปเดตชื่อ
                   </label>
@@ -862,19 +862,19 @@ export default function RenovationsPage() {
                   value={completionModal.newAssetName}
                   onChange={(e) => setCompletionModal(prev => prev ? { ...prev, newAssetName: e.target.value } : null)}
                   disabled={!completionModal.updateAssetName}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="ชื่อทรัพย์สินใหม่"
                 />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs text-warm-500 dark:text-warm-400">
                   ชื่อเดิม: {completionModal.project.assets?.name}
                 </p>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+              <div className="bg-warm-50 dark:bg-warm-800 rounded-xl p-4">
+                <p className="text-sm text-warm-600 dark:text-warm-400">
                   เมื่อคลิก &quot;อัปเดตทรัพย์สิน&quot; ระบบจะ:
                 </p>
-                <ul className="mt-2 text-sm text-gray-600 dark:text-gray-400 list-disc list-inside space-y-1">
+                <ul className="mt-2 text-sm text-warm-600 dark:text-warm-400 list-disc list-inside space-y-1">
                   <li>เปลี่ยนประเภททรัพย์สินเป็น <strong className="text-green-600 dark:text-green-400">{propertyTypeLabels[completionModal.project.target_property_type!]}</strong></li>
                   <li>เปลี่ยนสถานะเป็น <strong className="text-green-600 dark:text-green-400">พร้อมใช้งาน (owned)</strong></li>
                   {completionModal.updateAssetName && completionModal.newAssetName.trim() && (
@@ -884,22 +884,22 @@ export default function RenovationsPage() {
               </div>
             </div>
 
-            <div className="p-6 border-t border-gray-200 dark:border-gray-800 flex gap-3">
+            <div className="p-6 border-t border-warm-200 dark:border-warm-800 flex gap-3">
               <button
                 onClick={() => setCompletionModal(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="flex-1 px-4 py-2 border border-warm-300 dark:border-warm-700 rounded-xl text-warm-700 dark:text-warm-300 hover:bg-warm-50 dark:hover:bg-warm-800 transition-colors"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={() => handleCompleteWithAssetUpdate(false)}
-                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="flex-1 px-4 py-2 bg-warm-200 dark:bg-warm-700 text-warm-800 dark:text-warm-200 rounded-xl hover:bg-warm-300 dark:hover:bg-warm-600 transition-colors"
               >
                 เสร็จสิ้นเท่านั้น
               </button>
               <button
                 onClick={() => handleCompleteWithAssetUpdate(true)}
-                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

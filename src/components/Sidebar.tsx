@@ -66,15 +66,15 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gray-900 text-white border-b border-gray-800">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-warm-900 text-warm-50 border-b border-warm-800">
         <div className="flex items-center justify-between px-4 h-14">
           <Link href="/" className="flex items-center gap-2">
-            <HomeIcon className="w-6 h-6 text-blue-400" />
-            <span className="font-bold text-lg">Baanaioun</span>
+            <HomeIcon className="w-6 h-6 text-primary-300" />
+            <span className="font-bold text-lg text-primary-300">Baanaioun</span>
           </Link>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-lg hover:bg-gray-800 transition-colors"
+            className="p-2 rounded-xl hover:bg-warm-800 transition-colors"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? (
@@ -100,7 +100,7 @@ export default function Sidebar() {
 
       {/* Mobile Slide-out Menu */}
       <div
-        className={`lg:hidden fixed top-14 left-0 bottom-16 w-72 bg-gray-900 text-white z-40 transform transition-transform duration-300 ease-in-out ${
+        className={`lg:hidden fixed top-14 left-0 bottom-16 w-72 bg-warm-900 text-warm-50 z-40 transform transition-transform duration-300 ease-in-out ${
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -109,16 +109,16 @@ export default function Sidebar() {
             <li>
               <Link
                 href="/"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                   pathname === '/'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-primary-500 text-white'
+                    : 'text-warm-300 hover:bg-warm-800 hover:text-warm-50'
                 }`}
               >
                 <HomeIcon className="w-5 h-5" />
                 <div>
                   <div className="font-medium">หน้าหลัก</div>
-                  <div className="text-xs text-gray-400">Home</div>
+                  <div className="text-xs text-warm-400">Home</div>
                 </div>
               </Link>
             </li>
@@ -128,16 +128,16 @@ export default function Sidebar() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-warm-300 hover:bg-warm-800 hover:text-warm-50'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
                     <div>
                       <div className="font-medium">{item.name}</div>
-                      <div className="text-xs text-gray-400">{item.nameEn}</div>
+                      <div className="text-xs text-warm-400">{item.nameEn}</div>
                     </div>
                   </Link>
                 </li>
@@ -148,14 +148,14 @@ export default function Sidebar() {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 safe-area-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-warm-900 border-t border-warm-200 dark:border-warm-800 safe-area-bottom">
         <div className="flex items-center justify-around h-16">
           <Link
             href="/"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
               pathname === '/'
-                ? 'text-blue-600 dark:text-blue-400'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'text-primary-500 dark:text-primary-400'
+                : 'text-warm-500 dark:text-warm-400'
             }`}
           >
             <HomeIcon className="w-6 h-6" />
@@ -169,8 +169,8 @@ export default function Sidebar() {
                 href={item.href}
                 className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                   isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : 'text-gray-500 dark:text-gray-400'
+                    ? 'text-primary-500 dark:text-primary-400'
+                    : 'text-warm-500 dark:text-warm-400'
                 }`}
               >
                 <item.icon className="w-6 h-6" />
@@ -182,11 +182,11 @@ export default function Sidebar() {
       </nav>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-64 bg-gray-900 text-white min-h-screen flex-col fixed left-0 top-0 bottom-0">
-        <div className="p-6 border-b border-gray-800">
+      <aside className="hidden lg:flex w-64 bg-warm-900 text-warm-50 min-h-screen flex-col fixed left-0 top-0 bottom-0">
+        <div className="p-6 border-b border-warm-800">
           <Link href="/" className="block">
-            <h1 className="text-xl font-bold">Baanaioun</h1>
-            <p className="text-sm text-gray-400 mt-1">Property Management</p>
+            <h1 className="text-xl font-bold text-primary-300">Baanaioun</h1>
+            <p className="text-sm text-warm-400 mt-1">Property Management</p>
           </Link>
         </div>
 
@@ -198,16 +198,16 @@ export default function Sidebar() {
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                       isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        ? 'bg-primary-500 text-white'
+                        : 'text-warm-300 hover:bg-warm-800 hover:text-warm-50'
                     }`}
                   >
                     <item.icon className="w-5 h-5" />
                     <div>
                       <div>{item.name}</div>
-                      <div className="text-xs text-gray-400">{item.nameEn}</div>
+                      <div className="text-xs text-warm-400">{item.nameEn}</div>
                     </div>
                   </Link>
                 </li>
@@ -216,8 +216,8 @@ export default function Sidebar() {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
-          <p className="text-xs text-gray-500">Property Renovation Tracker</p>
+        <div className="p-4 border-t border-warm-800">
+          <p className="text-xs text-warm-500">Property Renovation Tracker</p>
         </div>
       </aside>
     </>

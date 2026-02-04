@@ -1,21 +1,72 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf8f6;
+  --foreground: #2a2320;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-ibm-plex-sans-thai);
+  --font-mono: var(--font-ibm-plex-mono);
+
+  /* Primary - Terracotta */
+  --color-primary-50: #fdf5f0;
+  --color-primary-100: #fae8db;
+  --color-primary-200: #f4ccb0;
+  --color-primary-300: #eb9e6e;
+  --color-primary-400: #e0783e;
+  --color-primary-500: #c75d24;
+  --color-primary-600: #a84d1e;
+  --color-primary-700: #8c3d18;
+  --color-primary-800: #6e3117;
+  --color-primary-900: #3d1c0e;
+
+  /* Sage Green */
+  --color-sage-50: #f4f7f2;
+  --color-sage-100: #e5ede1;
+  --color-sage-200: #c9d9c3;
+  --color-sage-300: #a3bc9a;
+  --color-sage-400: #7da072;
+  --color-sage-500: #5c8a4e;
+  --color-sage-600: #4a7340;
+  --color-sage-700: #3b5c33;
+  --color-sage-800: #2e4828;
+  --color-sage-900: #1e3019;
+  --color-sage-950: #0f1a0e;
+
+  /* Warm Gold */
+  --color-gold-50: #fdfaf0;
+  --color-gold-100: #faf2d4;
+  --color-gold-200: #f3e2a3;
+  --color-gold-300: #e8cc66;
+  --color-gold-400: #d9ad2e;
+  --color-gold-500: #c49a1a;
+  --color-gold-600: #a67d14;
+  --color-gold-700: #836010;
+  --color-gold-800: #634a0d;
+  --color-gold-900: #3f2f09;
+  --color-gold-950: #1f1705;
+
+  /* Warm Neutrals */
+  --color-warm-50: #faf8f6;
+  --color-warm-100: #f3efe9;
+  --color-warm-200: #e8e2d9;
+  --color-warm-300: #d4cbc0;
+  --color-warm-400: #b0a495;
+  --color-warm-500: #8d8073;
+  --color-warm-600: #706458;
+  --color-warm-700: #574c42;
+  --color-warm-800: #3e3530;
+  --color-warm-900: #2a2320;
+  --color-warm-950: #1a1512;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #1a1512;
+    --foreground: #f3efe9;
   }
 }
 
@@ -72,7 +123,7 @@ body {
   button,
   a,
   [role="button"] {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: rgba(199, 93, 36, 0.15);
   }
 }
 
@@ -80,6 +131,6 @@ body {
 @media (hover: hover) {
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 25px -5px rgba(62, 53, 48, 0.1), 0 8px 10px -6px rgba(62, 53, 48, 0.1);
   }
 }

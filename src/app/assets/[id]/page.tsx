@@ -226,8 +226,8 @@ export default function AssetDetailPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+        <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
+          <div className="p-6 text-center text-warm-500 dark:text-warm-400">
             <p>กำลังโหลด...</p>
           </div>
         </div>
@@ -238,8 +238,8 @@ export default function AssetDetailPage() {
   if (!asset) {
     return (
       <div className="p-8">
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-          <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+        <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
+          <div className="p-6 text-center text-warm-500 dark:text-warm-400">
             <p>ไม่พบทรัพย์สิน</p>
           </div>
         </div>
@@ -253,7 +253,7 @@ export default function AssetDetailPage() {
       <div className="mb-8">
         <Link
           href="/assets"
-          className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-4"
+          className="inline-flex items-center text-sm text-warm-500 dark:text-warm-400 hover:text-warm-700 dark:hover:text-warm-300 mb-4"
         >
           <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -262,8 +262,8 @@ export default function AssetDetailPage() {
         </Link>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{asset.name}</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
+            <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">{asset.name}</h1>
+            <p className="text-warm-600 dark:text-warm-400 mt-1">
               เลขที่โฉนด: {asset.title_deed_number} | {propertyTypeLabels[asset.property_type]}
             </p>
           </div>
@@ -273,61 +273,61 @@ export default function AssetDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Asset Details */}
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">ข้อมูลทรัพย์สิน</h2>
+          <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 p-6">
+            <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50 mb-4">ข้อมูลทรัพย์สิน</h2>
 
             <dl className="space-y-4">
               {asset.address && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">ที่อยู่</dt>
-                  <dd className="text-gray-900 dark:text-white">{asset.address}</dd>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">ที่อยู่</dt>
+                  <dd className="text-warm-900 dark:text-warm-50">{asset.address}</dd>
                 </div>
               )}
               <div>
-                <dt className="text-sm text-gray-500 dark:text-gray-400">ราคาซื้อ</dt>
-                <dd className="text-gray-900 dark:text-white font-medium">{formatCurrency(asset.purchase_price)}</dd>
+                <dt className="text-sm text-warm-500 dark:text-warm-400">ราคาซื้อ</dt>
+                <dd className="text-warm-900 dark:text-warm-50 font-medium">{formatCurrency(asset.purchase_price)}</dd>
               </div>
               {asset.purchase_date && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">วันที่ซื้อ</dt>
-                  <dd className="text-gray-900 dark:text-white">{formatDate(asset.purchase_date)}</dd>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">วันที่ซื้อ</dt>
+                  <dd className="text-warm-900 dark:text-warm-50">{formatDate(asset.purchase_date)}</dd>
                 </div>
               )}
               {asset.appraised_value && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">ราคาประเมิน</dt>
-                  <dd className="text-gray-900 dark:text-white font-medium">{formatCurrency(asset.appraised_value)}</dd>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">ราคาประเมิน</dt>
+                  <dd className="text-warm-900 dark:text-warm-50 font-medium">{formatCurrency(asset.appraised_value)}</dd>
                 </div>
               )}
               {asset.mortgage_bank && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">ธนาคารจำนอง</dt>
-                  <dd className="text-gray-900 dark:text-white">{asset.mortgage_bank}</dd>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">ธนาคารจำนอง</dt>
+                  <dd className="text-warm-900 dark:text-warm-50">{asset.mortgage_bank}</dd>
                   {asset.mortgage_amount && (
-                    <dd className="text-sm text-gray-500 dark:text-gray-400">{formatCurrency(asset.mortgage_amount)}</dd>
+                    <dd className="text-sm text-warm-500 dark:text-warm-400">{formatCurrency(asset.mortgage_amount)}</dd>
                   )}
                 </div>
               )}
               {asset.fire_insurance_expiry && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">วันหมดอายุประกันอัคคีภัย</dt>
-                  <dd className={new Date(asset.fire_insurance_expiry) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">วันหมดอายุประกันอัคคีภัย</dt>
+                  <dd className={new Date(asset.fire_insurance_expiry) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-warm-900 dark:text-warm-50'}>
                     {formatDate(asset.fire_insurance_expiry)}
                   </dd>
                 </div>
               )}
               {asset.land_tax_due_date && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">กำหนดจ่ายภาษีที่ดิน</dt>
-                  <dd className={new Date(asset.land_tax_due_date) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">กำหนดจ่ายภาษีที่ดิน</dt>
+                  <dd className={new Date(asset.land_tax_due_date) < new Date() ? 'text-red-600 dark:text-red-400' : 'text-warm-900 dark:text-warm-50'}>
                     {formatDate(asset.land_tax_due_date)}
                   </dd>
                 </div>
               )}
               {asset.notes && (
                 <div>
-                  <dt className="text-sm text-gray-500 dark:text-gray-400">หมายเหตุ</dt>
-                  <dd className="text-gray-900 dark:text-white whitespace-pre-wrap">{asset.notes}</dd>
+                  <dt className="text-sm text-warm-500 dark:text-warm-400">หมายเหตุ</dt>
+                  <dd className="text-warm-900 dark:text-warm-50 whitespace-pre-wrap">{asset.notes}</dd>
                 </div>
               )}
             </dl>
@@ -336,18 +336,18 @@ export default function AssetDetailPage() {
 
         {/* Images Section */}
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+          <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800 p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">รูปภาพ</h2>
+                <h2 className="text-lg font-semibold text-warm-900 dark:text-warm-50">รูปภาพ</h2>
                 {/* View Toggle */}
-                <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
+                <div className="flex items-center bg-warm-100 dark:bg-warm-800 rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                       viewMode === 'grid'
-                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
+                        : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -356,10 +356,10 @@ export default function AssetDetailPage() {
                   </button>
                   <button
                     onClick={() => setViewMode('timeline')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                       viewMode === 'timeline'
-                        ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
+                        : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
                     }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,7 +374,7 @@ export default function AssetDetailPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value as ImageCategory)}
-                  className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                  className="px-3 py-2 text-sm border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500"
                 >
                   {(Object.entries(imageCategoryLabels) as [ImageCategory, { label: string }][]).map(([key, { label }]) => (
                     <option key={key} value={key}>{label}</option>
@@ -384,7 +384,7 @@ export default function AssetDetailPage() {
                   <select
                     value={selectedProject || ''}
                     onChange={(e) => setSelectedProject(e.target.value || null)}
-                    className="px-3 py-2 text-sm border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
+                    className="px-3 py-2 text-sm border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="">ไม่ระบุโปรเจกต์</option>
                     {activeProjects.map((project) => (
@@ -394,7 +394,7 @@ export default function AssetDetailPage() {
                     ))}
                   </select>
                 )}
-                <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer flex items-center gap-2">
+                <label className="px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors cursor-pointer flex items-center gap-2">
                   {uploading ? (
                     <>
                       <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -426,13 +426,13 @@ export default function AssetDetailPage() {
             {viewMode === 'grid' ? (
               <>
                 {/* Category Tabs */}
-                <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-gray-700 pb-4 flex-wrap">
+                <div className="flex gap-2 mb-6 border-b border-warm-200 dark:border-warm-700 pb-4 flex-wrap">
                   <button
                     onClick={() => setActiveTab('all')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       activeTab === 'all'
-                        ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                        ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
+                        : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
                     }`}
                   >
                     ทั้งหมด ({images.length})
@@ -443,10 +443,10 @@ export default function AssetDetailPage() {
                       <button
                         key={key}
                         onClick={() => setActiveTab(key)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                           activeTab === key
-                            ? 'bg-gray-900 dark:bg-white text-white dark:text-gray-900'
-                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                            ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
+                            : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
                         }`}
                       >
                         {label} ({count})
@@ -457,8 +457,8 @@ export default function AssetDetailPage() {
 
                 {/* Images Grid */}
                 {filteredImages.length === 0 ? (
-                  <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="text-center py-12 text-warm-500 dark:text-warm-400">
+                    <svg className="w-16 h-16 mx-auto mb-4 text-warm-300 dark:text-warm-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <p className="text-lg font-medium mb-2">ยังไม่มีรูปภาพ</p>
@@ -469,7 +469,7 @@ export default function AssetDetailPage() {
                     {filteredImages.map((image) => (
                       <div key={image.id} className="relative group">
                         <div
-                          className="aspect-square rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800 cursor-pointer"
+                          className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 cursor-pointer"
                           onClick={() => setLightboxImage(image.url)}
                         >
                           <img
@@ -483,7 +483,7 @@ export default function AssetDetailPage() {
                         </span>
                         <button
                           onClick={() => handleDeleteImage(image)}
-                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
                         >
                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -514,7 +514,7 @@ export default function AssetDetailPage() {
         >
           <button
             onClick={() => setLightboxImage(null)}
-            className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+            className="absolute top-4 right-4 p-2 text-white hover:bg-white/10 rounded-xl transition-colors"
           >
             <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

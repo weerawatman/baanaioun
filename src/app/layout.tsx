@@ -1,16 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans_Thai, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const ibmPlexSansThai = IBM_Plex_Sans_Thai({
+  variable: "--font-ibm-plex-sans-thai",
+  subsets: ["thai", "latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ibmPlexMono = IBM_Plex_Mono({
+  variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -40,12 +42,12 @@ export default function RootLayout({
   return (
     <html lang="th">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${ibmPlexSansThai.variable} ${ibmPlexMono.variable} antialiased`}
       >
         <div className="min-h-screen">
           <Sidebar />
           {/* Main content area with responsive padding for mobile header/bottom nav */}
-          <main className="bg-gray-50 dark:bg-gray-950 min-h-screen pt-14 pb-16 lg:pt-0 lg:pb-0 lg:ml-64">
+          <main className="bg-warm-50 dark:bg-warm-950 min-h-screen pt-14 pb-16 lg:pt-0 lg:pb-0 lg:ml-64">
             {children}
           </main>
         </div>
