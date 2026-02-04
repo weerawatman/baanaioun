@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { PublicAsset, PropertyType, ImageCategory } from '@/types/database';
 import Link from 'next/link';
 import { submitLead } from './actions';
+import { parseLatLong } from '@/lib/geo';
 
 export const runtime = 'edge';
 
@@ -43,16 +44,6 @@ function formatCurrency(amount: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
-}
-
-function parseLatLong(value: string | null | undefined): { lat: number; lng: number } | null {
-  if (!value) return null;
-  const parts = value.split(',').map((s) => s.trim());
-  if (parts.length !== 2) return null;
-  const lat = parseFloat(parts[0]);
-  const lng = parseFloat(parts[1]);
-  if (isNaN(lat) || isNaN(lng)) return null;
-  return { lat, lng };
 }
 
 export default function ListingDetailPage({

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PropertyType } from '@/types/database';
+import MapPickerDynamic from './MapPickerDynamic';
 
 interface AddAssetModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
     appraised_value: '',
     mortgage_bank: '',
     mortgage_amount: '',
+    location_lat_long: '',
     fire_insurance_expiry: '',
     land_tax_due_date: '',
     notes: '',
@@ -60,6 +62,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         mortgage_amount: formData.mortgage_amount ? parseFloat(formData.mortgage_amount) : null,
         fire_insurance_expiry: formData.fire_insurance_expiry || null,
         land_tax_due_date: formData.land_tax_due_date || null,
+        location_lat_long: formData.location_lat_long || null,
         notes: formData.notes || null,
         status: 'owned',
       });
@@ -75,6 +78,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         appraised_value: '',
         mortgage_bank: '',
         mortgage_amount: '',
+        location_lat_long: '',
         fire_insurance_expiry: '',
         land_tax_due_date: '',
         notes: '',
@@ -199,6 +203,17 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
                   autoComplete="street-address"
                   className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                   placeholder="ที่ตั้งทรัพย์สิน"
+                />
+              </div>
+
+              {/* ตำแหน่งบนแผนที่ */}
+              <div>
+                <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
+                  ตำแหน่งบนแผนที่
+                </label>
+                <MapPickerDynamic
+                  value={formData.location_lat_long || null}
+                  onChange={(val) => setFormData(prev => ({ ...prev, location_lat_long: val || '' }))}
                 />
               </div>
             </div>

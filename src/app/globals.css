@@ -127,6 +127,11 @@ body {
   }
 }
 
+/* Leaflet map z-index fix for modals */
+.leaflet-container {
+  z-index: 0;
+}
+
 /* Card hover effects for desktop only */
 @media (hover: hover) {
   .hover-lift:hover {
