@@ -1,5 +1,5 @@
 export type PropertyType = 'land' | 'house' | 'semi_detached_house' | 'condo' | 'townhouse' | 'commercial' | 'other';
-export type AssetStatus = 'owned' | 'sold' | 'under_renovation';
+export type AssetStatus = 'owned' | 'sold' | 'under_renovation' | 'available';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
 export type ExpenseCategory =
   | 'materials'
@@ -29,6 +29,10 @@ export interface Asset {
   land_tax_due_date?: string | null;
   status: AssetStatus;
   notes?: string | null;
+  selling_price?: number | null;
+  rental_price?: number | null;
+  description?: string | null;
+  location_lat_long?: string | null;
 }
 
 export interface RenovationProject {
@@ -80,6 +84,29 @@ export interface AssetImage {
   is_primary: boolean;
   category: ImageCategory;
   renovation_project_id?: string | null;
+}
+
+export interface PublicAsset {
+  id: string;
+  created_at: string;
+  name: string;
+  property_type: PropertyType;
+  address?: string | null;
+  description?: string | null;
+  selling_price?: number | null;
+  rental_price?: number | null;
+  location_lat_long?: string | null;
+  status: 'available';
+}
+
+export interface Lead {
+  id: string;
+  created_at: string;
+  asset_id: string;
+  customer_name: string;
+  customer_phone?: string | null;
+  customer_line_id?: string | null;
+  message?: string | null;
 }
 
 export type Json =
@@ -162,9 +189,28 @@ export interface Database {
           }
         ];
       };
+      leads: {
+        Row: Lead;
+        Insert: Omit<Lead, 'id' | 'created_at'>;
+        Update: Partial<Omit<Lead, 'id' | 'created_at'>>;
+        Relationships: [
+          {
+            foreignKeyName: 'leads_asset_id_fkey';
+            columns: ['asset_id'];
+            isOneToOne: false;
+            referencedRelation: 'assets';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
     };
     Views: {
-      [_ in never]: never;
+      public_assets: {
+        Row: PublicAsset;
+      };
+      public_asset_images: {
+        Row: Pick<AssetImage, 'id' | 'asset_id' | 'url' | 'caption' | 'is_primary' | 'category' | 'created_at'>;
+      };
     };
     Functions: {
       [_ in never]: never;
