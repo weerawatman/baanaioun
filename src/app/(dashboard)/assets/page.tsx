@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { supabase } from '@/lib/supabase';
-import { Asset, PropertyType, AssetStatus } from '@/types/database';
+import { PropertyType, AssetStatus } from '@/types/database';
+import { useAssets, useAssetFilters } from '@/features/assets/hooks';
+import { useLocalStorage } from '@/shared/hooks';
+import { formatCurrency, formatDate, isDateExpired } from '@/shared/utils';
 
 // Dynamic import for modal - loads only when needed
 const AddAssetModal = dynamic(() => import('@/components/AddAssetModal'), {
@@ -31,137 +33,46 @@ const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> =
   sold: { label: 'ขายไปแล้ว', color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
 };
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-function isExpired(dateString: string | null | undefined): boolean {
-  if (!dateString) return false;
-  return new Date(dateString) < new Date();
-}
-
 export default function AssetsPage() {
   const router = useRouter();
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // Use new custom hooks
+  const { assets, loading, error, refetch } = useAssets();
+  const {
+    paginatedAssets,
+    statusFilter,
+    setStatusFilter,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    statusCounts,
+  } = useAssetFilters(assets, 20);
+
+  // UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
-  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
-  const [statusFilter, setStatusFilter] = useState<AssetStatus | 'all'>('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const [editingAsset, setEditingAsset] = useState<typeof assets[0] | null>(null);
+  const [viewMode, setViewMode] = useLocalStorage<'card' | 'table'>('assetsViewMode', 'card');
 
-  const fetchAssets = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('assets')
-        .select(`
-          id,
-          name,
-          title_deed_number,
-          property_type,
-          status,
-          purchase_price,
-          appraised_value,
-          mortgage_bank,
-          mortgage_amount,
-          fire_insurance_expiry,
-          land_tax_due_date,
-          tenant_name,
-          tenant_contact,
-          created_at
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching assets:', error);
-        // Could add toast notification here
-      } else {
-        setAssets(data || []);
-      }
-    } catch (err) {
-      console.error('Unexpected error:', err);
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchAssets();
-    // Load view preference from localStorage
-    const savedView = localStorage.getItem('assetsViewMode');
-    if (savedView === 'card' || savedView === 'table') {
-      setViewMode(savedView);
-    }
-  }, []);
-
-  // Save view preference to localStorage
+  // Handle view mode change
   const handleViewModeChange = (mode: 'card' | 'table') => {
     setViewMode(mode);
-    localStorage.setItem('assetsViewMode', mode);
   };
 
-  // Filter assets based on status (memoized to prevent unnecessary recalculations)
-  const filteredAssets = useMemo(() => {
-    return statusFilter === 'all'
-      ? assets
-      : assets.filter(asset => asset.status === statusFilter);
-  }, [assets, statusFilter]);
 
-  // Pagination (memoized)
-  const paginatedAssets = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredAssets.slice(startIndex, endIndex);
-  }, [filteredAssets, currentPage]);
-
-  const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
-
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter]);
-
-  // Count assets by status (memoized)
-  const statusCounts = useMemo(() => ({
-    all: assets.length,
-    developing: assets.filter(a => a.status === 'developing').length,
-    ready_for_sale: assets.filter(a => a.status === 'ready_for_sale').length,
-    ready_for_rent: assets.filter(a => a.status === 'ready_for_rent').length,
-    rented: assets.filter(a => a.status === 'rented').length,
-    sold: assets.filter(a => a.status === 'sold').length,
-  }), [assets]);
-
-  // Handle edit asset (memoized to prevent recreation on every render)
-  const handleEditAsset = useCallback((asset: Asset, e: React.MouseEvent) => {
+  // Handle edit asset
+  const handleEditAsset = (asset: typeof assets[0], e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent navigation
     setEditingAsset(asset);
     setIsModalOpen(true);
-  }, []);
+  };
 
-  // Handle close modal (memoized)
-  const handleCloseModal = useCallback(() => {
+  // Handle close modal
+  const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingAsset(null);
     // Refresh assets list without showing loading spinner
-    fetchAssets(false);
-  }, [fetchAssets]);
+    refetch(false);
+  };
 
   return (
     <div className="p-4 md:p-8">
@@ -301,7 +212,7 @@ export default function AssetsPage() {
             </div>
           ))}
         </div>
-      ) : filteredAssets.length === 0 ? (
+      ) : paginatedAssets.length === 0 ? (
         <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
           <div className="p-8 text-center">
             <div className="text-4xl mb-4">🏠</div>
@@ -382,7 +293,7 @@ export default function AssetsPage() {
                       </span>
                     )}
                     {asset.fire_insurance_expiry && (
-                      <span className={`px-2 py-1 rounded-lg ${isExpired(asset.fire_insurance_expiry)
+                      <span className={`px-2 py-1 rounded-lg ${isDateExpired(asset.fire_insurance_expiry)
                         ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                         : 'bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400'
                         }`}>
@@ -390,7 +301,7 @@ export default function AssetsPage() {
                       </span>
                     )}
                     {asset.land_tax_due_date && (
-                      <span className={`px-2 py-1 rounded-lg ${isExpired(asset.land_tax_due_date)
+                      <span className={`px-2 py-1 rounded-lg ${isDateExpired(asset.land_tax_due_date)
                         ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                         : 'bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400'
                         }`}>
@@ -496,7 +407,7 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={
-                            isExpired(asset.fire_insurance_expiry)
+                            isDateExpired(asset.fire_insurance_expiry)
                               ? 'text-red-600 dark:text-red-400'
                               : 'text-warm-900 dark:text-warm-50'
                           }>
@@ -505,7 +416,7 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={
-                            isExpired(asset.land_tax_due_date)
+                            isDateExpired(asset.land_tax_due_date)
                               ? 'text-red-600 dark:text-red-400'
                               : 'text-warm-900 dark:text-warm-50'
                           }>
@@ -534,10 +445,10 @@ export default function AssetsPage() {
       )}
 
       {/* Pagination */}
-      {!loading && filteredAssets.length > itemsPerPage && (
+      {!loading && paginatedAssets.length > 0 && totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             className="px-4 py-2 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -550,8 +461,8 @@ export default function AssetsPage() {
                 key={page}
                 onClick={() => setCurrentPage(page)}
                 className={`px-4 py-2 rounded-xl transition-colors ${currentPage === page
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
                   }`}
               >
                 {page}
@@ -560,7 +471,7 @@ export default function AssetsPage() {
           </div>
 
           <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             className="px-4 py-2 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -572,7 +483,7 @@ export default function AssetsPage() {
       <AddAssetModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onSuccess={fetchAssets}
+        onSuccess={refetch}
         asset={editingAsset}
         mode={editingAsset ? 'edit' : 'add'}
       />
