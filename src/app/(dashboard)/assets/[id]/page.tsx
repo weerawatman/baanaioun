@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { Asset, AssetImage, PropertyType, AssetStatus, ImageCategory, RenovationProject } from '@/types/database';
 import ProjectTimelineGallery from '@/components/ProjectTimelineGallery';
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const runtime = 'edge';
 
@@ -56,6 +57,7 @@ function formatDate(dateString: string | null | undefined): string {
 export default function AssetDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const assetId = params.id as string;
 
   const [asset, setAsset] = useState<Asset | null>(null);
@@ -494,14 +496,16 @@ export default function AssetDetailPage() {
                         <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${imageCategoryLabels[image.category]?.color}`}>
                           {imageCategoryLabels[image.category]?.label}
                         </span>
-                        <button
-                          onClick={() => handleDeleteImage(image)}
-                          className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteImage(image)}
+                            className="absolute top-2 right-2 p-1.5 bg-red-600 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -513,6 +517,7 @@ export default function AssetDetailPage() {
                 onImageClick={(url) => setLightboxImage(url)}
                 onDeleteImage={handleDeleteImage}
                 imageCategoryLabels={imageCategoryLabels}
+                isAdmin={isAdmin}
               />
             )}
           </div>

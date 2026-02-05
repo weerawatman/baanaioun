@@ -1,3 +1,13 @@
+export type UserRole = 'admin' | 'user';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name: string | null;
+  role: UserRole;
+  created_at: string;
+}
+
 export type PropertyType = 'land' | 'house' | 'semi_detached_house' | 'condo' | 'townhouse' | 'commercial' | 'other';
 export type AssetStatus = 'developing' | 'ready_for_sale' | 'ready_for_rent' | 'rented' | 'sold';
 export type RenovationStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled';
@@ -202,6 +212,12 @@ export interface Database {
             referencedColumns: ['id'];
           }
         ];
+      };
+      user_profiles: {
+        Row: UserProfile;
+        Insert: Omit<UserProfile, 'created_at'>;
+        Update: Partial<Omit<UserProfile, 'id' | 'created_at'>>;
+        Relationships: [];
       };
     };
     Views: {

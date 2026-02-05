@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
   { name: 'ทรัพย์สิน', nameEn: 'Assets', href: '/assets', icon: BuildingIcon },
@@ -44,7 +45,18 @@ function HomeIcon({ className }: { className?: string }) {
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { profile, isAdmin, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+    router.refresh();
+  };
+
+  const displayName = profile?.full_name || profile?.email?.split('@')[0] || '';
+  const avatarLetter = displayName.charAt(0).toUpperCase();
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -104,8 +116,8 @@ export default function Sidebar() {
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <nav className="p-4 h-full overflow-y-auto">
-          <ul className="space-y-2">
+        <nav className="p-4 h-full overflow-y-auto flex flex-col">
+          <ul className="space-y-2 flex-1">
             <li>
               <Link
                 href="/"
@@ -144,6 +156,32 @@ export default function Sidebar() {
               );
             })}
           </ul>
+
+          {/* User info + logout */}
+          {profile && (
+            <div className="pt-4 border-t border-warm-800">
+              <div className="flex items-center gap-3 px-4 py-2">
+                <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-white text-sm font-bold">
+                  {avatarLetter}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-warm-50 truncate">{displayName}</p>
+                  <p className="text-xs text-warm-400">
+                    {isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="w-full mt-2 flex items-center gap-3 px-4 py-2.5 text-sm text-warm-400 hover:text-warm-50 hover:bg-warm-800 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                ออกจากระบบ
+              </button>
+            </div>
+          )}
         </nav>
       </div>
 
@@ -217,7 +255,32 @@ export default function Sidebar() {
         </nav>
 
         <div className="p-4 border-t border-warm-800">
-          <p className="text-xs text-warm-500">Property Renovation Tracker</p>
+          {profile ? (
+            <div>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                  {avatarLetter}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-warm-50 truncate">{displayName}</p>
+                  <p className="text-xs text-warm-400">
+                    {isAdmin ? 'ผู้ดูแลระบบ' : 'ผู้ใช้งาน'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="w-full mt-3 flex items-center justify-center gap-2 px-3 py-2 text-sm text-warm-400 hover:text-warm-50 hover:bg-warm-800 rounded-xl transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                ออกจากระบบ
+              </button>
+            </div>
+          ) : (
+            <p className="text-xs text-warm-500">Property Renovation Tracker</p>
+          )}
         </div>
       </aside>
     </>
