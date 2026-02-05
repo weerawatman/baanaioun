@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Asset, PropertyType, AssetStatus } from '@/types/database';
@@ -54,23 +54,31 @@ export default function AssetsPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
   const [statusFilter, setStatusFilter] = useState<AssetStatus | 'all'>('all');
 
-  const fetchAssets = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('assets')
-      .select('*')
-      .order('created_at', { ascending: false });
+  const fetchAssets = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true);
 
-    if (error) {
-      console.error('Error fetching assets:', error);
-    } else {
-      setAssets(data || []);
+    try {
+      const { data, error } = await supabase
+        .from('assets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching assets:', error);
+        // Could add toast notification here
+      } else {
+        setAssets(data || []);
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+    } finally {
+      if (showLoading) setLoading(false);
     }
-    setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchAssets();
@@ -87,20 +95,37 @@ export default function AssetsPage() {
     localStorage.setItem('assetsViewMode', mode);
   };
 
-  // Filter assets based on status
-  const filteredAssets = statusFilter === 'all'
-    ? assets
-    : assets.filter(asset => asset.status === statusFilter);
+  // Filter assets based on status (memoized to prevent unnecessary recalculations)
+  const filteredAssets = useMemo(() => {
+    return statusFilter === 'all'
+      ? assets
+      : assets.filter(asset => asset.status === statusFilter);
+  }, [assets, statusFilter]);
 
-  // Count assets by status
-  const statusCounts = {
+  // Count assets by status (memoized)
+  const statusCounts = useMemo(() => ({
     all: assets.length,
     developing: assets.filter(a => a.status === 'developing').length,
     ready_for_sale: assets.filter(a => a.status === 'ready_for_sale').length,
     ready_for_rent: assets.filter(a => a.status === 'ready_for_rent').length,
     rented: assets.filter(a => a.status === 'rented').length,
     sold: assets.filter(a => a.status === 'sold').length,
-  };
+  }), [assets]);
+
+  // Handle edit asset (memoized to prevent recreation on every render)
+  const handleEditAsset = useCallback((asset: Asset, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation
+    setEditingAsset(asset);
+    setIsModalOpen(true);
+  }, []);
+
+  // Handle close modal (memoized)
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setEditingAsset(null);
+    // Refresh assets list without showing loading spinner
+    fetchAssets(false);
+  }, [fetchAssets]);
 
   return (
     <div className="p-4 md:p-8">
@@ -247,18 +272,29 @@ export default function AssetsPage() {
                 >
                   {/* Card Header */}
                   <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 flex-1">
                       <span className="text-2xl">{propertyTypeLabels[asset.property_type]?.icon}</span>
-                      <div>
+                      <div className="flex-1">
                         <h3 className="font-semibold text-warm-900 dark:text-warm-50">{asset.name}</h3>
                         <p className="text-sm text-warm-500 dark:text-warm-400">
                           โฉนด: {asset.title_deed_number}
                         </p>
                       </div>
                     </div>
-                    <span className="px-2 py-1 text-xs font-medium rounded-lg bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400">
-                      {propertyTypeLabels[asset.property_type]?.label}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => handleEditAsset(asset, e)}
+                        className="p-2 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors group"
+                        title="แก้ไข"
+                      >
+                        <svg className="w-4 h-4 text-warm-400 group-hover:text-primary-600 dark:group-hover:text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <span className="px-2 py-1 text-xs font-medium rounded-lg bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400">
+                        {propertyTypeLabels[asset.property_type]?.label}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Status Badge */}
@@ -351,6 +387,9 @@ export default function AssetsPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
                         ภาษีที่ดิน
                       </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-warm-500 dark:text-warm-400 uppercase tracking-wider">
+                        จัดการ
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-warm-200 dark:divide-warm-800">
@@ -419,6 +458,17 @@ export default function AssetsPage() {
                             {formatDate(asset.land_tax_due_date)}
                           </span>
                         </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                          <button
+                            onClick={(e) => handleEditAsset(asset, e)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 text-sm text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            แก้ไข
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -431,8 +481,10 @@ export default function AssetsPage() {
 
       <AddAssetModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         onSuccess={fetchAssets}
+        asset={editingAsset}
+        mode={editingAsset ? 'edit' : 'add'}
       />
     </div>
   );
