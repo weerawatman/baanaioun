@@ -41,7 +41,15 @@ export class RenovationService {
                 query = query.eq('project_type', filters.projectType);
             }
 
-            const { data, error } = await query;
+            // Create a promise that rejects in 10 seconds
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new AppError('Request timed out', ErrorCodes.NETWORK_ERROR, 408)), 10000);
+            });
+
+            const { data, error } = await Promise.race([
+                query,
+                timeoutPromise
+            ]) as any;
 
             if (error) {
                 logger.error('Error fetching renovations', error);

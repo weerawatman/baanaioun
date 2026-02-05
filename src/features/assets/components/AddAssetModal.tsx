@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { PropertyType, AssetStatus, Asset } from '@/types/database';
-import MapPickerDynamic from './MapPickerDynamic';
+import { Asset, PropertyType, AssetStatus } from '@/types/database';
+import MapPickerDynamic from '@/shared/components/MapPickerDynamic';
+import { PROPERTY_TYPE_OPTIONS, ASSET_STATUS_OPTIONS } from '@/shared/utils';
+import { Spinner } from '@/shared/components/ui';
+import { useAssetMutations } from '@/features/assets/hooks/useAssetMutations';
 
 interface AddAssetModalProps {
   isOpen: boolean;
@@ -13,26 +15,9 @@ interface AddAssetModalProps {
   mode?: 'add' | 'edit';
 }
 
-const propertyTypes: { value: PropertyType; label: string; icon: string }[] = [
-  { value: 'land', label: 'ที่ดินเปล่า', icon: '🏞️' },
-  { value: 'house', label: 'บ้านเดี่ยว', icon: '🏠' },
-  { value: 'semi_detached_house', label: 'บ้านแฝด', icon: '🏘️' },
-  { value: 'condo', label: 'คอนโดมิเนียม', icon: '🏢' },
-  { value: 'townhouse', label: 'ทาวน์เฮาส์', icon: '🏡' },
-  { value: 'commercial', label: 'อาคารพาณิชย์', icon: '🏬' },
-  { value: 'other', label: 'อื่นๆ', icon: '📦' },
-];
-
-const statusOptions: { value: AssetStatus; label: string }[] = [
-  { value: 'developing', label: 'ว่างรอการพัฒนา' },
-  { value: 'ready_for_sale', label: 'พร้อมขาย' },
-  { value: 'ready_for_rent', label: 'พร้อมเช่า' },
-  { value: 'rented', label: 'มีคนเช่าอยู่' },
-  { value: 'sold', label: 'ขายไปแล้ว' },
-];
-
 export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode = 'add' }: AddAssetModalProps) {
-  const [loading, setLoading] = useState(false);
+  const { createAsset, updateAsset, creating, updating, error: mutationError } = useAssetMutations();
+  const loading = creating || updating;
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
@@ -60,43 +45,34 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
 
-    try {
-      const dataToSave = {
-        title_deed_number: formData.title_deed_number,
-        name: formData.name || formData.title_deed_number,
-        address: formData.address || null,
-        property_type: formData.property_type,
-        purchase_price: parseFloat(formData.purchase_price) || 0,
-        appraised_value: formData.appraised_value ? parseFloat(formData.appraised_value) : null,
-        mortgage_bank: formData.mortgage_bank || null,
-        mortgage_amount: formData.mortgage_amount ? parseFloat(formData.mortgage_amount) : null,
-        fire_insurance_expiry: formData.fire_insurance_expiry || null,
-        land_tax_due_date: formData.land_tax_due_date || null,
-        location_lat_long: formData.location_lat_long || null,
-        notes: formData.notes || null,
-        status: formData.status,
-        tenant_name: formData.status === 'rented' ? (formData.tenant_name || null) : null,
-        tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
-      };
+    const dataToSave = {
+      title_deed_number: formData.title_deed_number,
+      name: formData.name || formData.title_deed_number,
+      address: formData.address || null,
+      property_type: formData.property_type,
+      purchase_price: parseFloat(formData.purchase_price) || 0,
+      appraised_value: formData.appraised_value ? parseFloat(formData.appraised_value) : null,
+      mortgage_bank: formData.mortgage_bank || null,
+      mortgage_amount: formData.mortgage_amount ? parseFloat(formData.mortgage_amount) : null,
+      fire_insurance_expiry: formData.fire_insurance_expiry || null,
+      land_tax_due_date: formData.land_tax_due_date || null,
+      location_lat_long: formData.location_lat_long || null,
+      notes: formData.notes || null,
+      status: formData.status,
+      tenant_name: formData.status === 'rented' ? (formData.tenant_name || null) : null,
+      tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
+    };
 
-      if (mode === 'edit' && asset) {
-        const { error: updateError } = await supabase
-          .from('assets')
-          .update(dataToSave)
-          .eq('id', asset.id);
+    let result;
+    if (mode === 'edit' && asset) {
+      result = await updateAsset(asset.id, dataToSave);
+    } else {
+      result = await createAsset(dataToSave);
+    }
 
-        if (updateError) throw updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('assets')
-          .insert(dataToSave);
-
-        if (insertError) throw insertError;
-      }
-
+    if (result) {
       setFormData({
         title_deed_number: '',
         name: '',
@@ -117,10 +93,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
 
       onSuccess();
       onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
-    } finally {
-      setLoading(false);
+    } else if (mutationError) {
+      setError(mutationError.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
 
@@ -203,7 +177,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                   ประเภททรัพย์สิน <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {propertyTypes.map(type => (
+                  {PROPERTY_TYPE_OPTIONS.map(type => (
                     <button
                       key={type.value}
                       type="button"
@@ -231,7 +205,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                   onChange={handleChange}
                   className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
                 >
-                  {statusOptions.map(opt => (
+                  {ASSET_STATUS_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
@@ -467,10 +441,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
               >
                 {loading ? (
                   <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
+                    <Spinner size="sm" />
                     กำลังบันทึก...
                   </>
                 ) : (

@@ -2,30 +2,13 @@
 
 import { useEffect, useState, use, useActionState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PublicAsset, PropertyType, ImageCategory } from '@/types/database';
+import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
 import { submitLead } from './actions';
 import { parseLatLong } from '@/lib/geo';
+import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
 
-export const runtime = 'edge';
 
-const propertyTypeLabels: Record<PropertyType, { label: string; icon: string }> = {
-  land: { label: 'ที่ดินเปล่า', icon: '🏞️' },
-  house: { label: 'บ้านเดี่ยว', icon: '🏠' },
-  semi_detached_house: { label: 'บ้านแฝด', icon: '🏘️' },
-  condo: { label: 'คอนโดมิเนียม', icon: '🏢' },
-  townhouse: { label: 'ทาวน์เฮาส์', icon: '🏡' },
-  commercial: { label: 'อาคารพาณิชย์', icon: '🏬' },
-  other: { label: 'อื่นๆ', icon: '📦' },
-};
-
-const imageCategoryLabels: Record<ImageCategory, string> = {
-  purchase: 'ซื้อ',
-  before_renovation: 'ก่อนปรับปรุง',
-  in_progress: 'ระหว่างดำเนินการ',
-  after_renovation: 'หลังปรับปรุง',
-  final: 'เสร็จสิ้น',
-};
 
 interface PublicImage {
   id: string;
@@ -35,15 +18,6 @@ interface PublicImage {
   is_primary: boolean;
   category: ImageCategory;
   created_at: string;
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export default function ListingDetailPage({
@@ -225,8 +199,8 @@ export default function ListingDetailPage({
             {/* Title & type */}
             <div>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium rounded-full bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-300 mb-3">
-                {propertyTypeLabels[asset.property_type]?.icon}{' '}
-                {propertyTypeLabels[asset.property_type]?.label}
+                {PROPERTY_TYPE_LABELS[asset.property_type]?.icon}{' '}
+                {PROPERTY_TYPE_LABELS[asset.property_type]?.label}
               </span>
               <h1 className="text-2xl md:text-3xl font-bold text-warm-900 dark:text-warm-50 mt-2">
                 {asset.name}
@@ -263,14 +237,14 @@ export default function ListingDetailPage({
                 </div>
               )}
               {(!asset.selling_price || asset.selling_price <= 0) &&
-               (!asset.rental_price || asset.rental_price <= 0) && (
-                <div className="flex-1 bg-white dark:bg-warm-900 rounded-2xl border border-warm-200 dark:border-warm-800 p-5">
-                  <p className="text-sm text-warm-500 dark:text-warm-400 mb-1">ราคา</p>
-                  <p className="text-xl font-semibold text-warm-600 dark:text-warm-300 italic">
-                    สอบถามราคา
-                  </p>
-                </div>
-              )}
+                (!asset.rental_price || asset.rental_price <= 0) && (
+                  <div className="flex-1 bg-white dark:bg-warm-900 rounded-2xl border border-warm-200 dark:border-warm-800 p-5">
+                    <p className="text-sm text-warm-500 dark:text-warm-400 mb-1">ราคา</p>
+                    <p className="text-xl font-semibold text-warm-600 dark:text-warm-300 italic">
+                      สอบถามราคา
+                    </p>
+                  </div>
+                )}
             </div>
 
             {/* Description */}
@@ -344,7 +318,7 @@ export default function ListingDetailPage({
                         </p>
                       )}
                       <span className="absolute top-2 left-2 px-2 py-0.5 text-xs font-medium rounded bg-black/50 text-white backdrop-blur-sm">
-                        {imageCategoryLabels[image.category] || image.category}
+                        {IMAGE_CATEGORY_LABELS[image.category]?.label || image.category}
                       </span>
                     </div>
                   ))}
@@ -402,11 +376,10 @@ export default function ListingDetailPage({
                         name="customer_name"
                         required
                         autoComplete="name"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${
-                          formState?.errors?.customer_name
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_name
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
-                        }`}
+                          }`}
                         placeholder="ชื่อ-นามสกุล"
                       />
                       {formState?.errors?.customer_name && (
@@ -422,11 +395,10 @@ export default function ListingDetailPage({
                         type="tel"
                         name="customer_phone"
                         autoComplete="tel"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${
-                          formState?.errors?.customer_phone
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_phone
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
-                        }`}
+                          }`}
                         placeholder="0812345678"
                       />
                       {formState?.errors?.customer_phone && (
@@ -442,11 +414,10 @@ export default function ListingDetailPage({
                         type="text"
                         name="customer_line_id"
                         autoComplete="off"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${
-                          formState?.errors?.customer_line_id
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_line_id
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
-                        }`}
+                          }`}
                         placeholder="@line_id"
                       />
                       {formState?.errors?.customer_line_id && (
@@ -461,11 +432,10 @@ export default function ListingDetailPage({
                       <textarea
                         name="message"
                         rows={3}
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow resize-none ${
-                          formState?.errors?.message
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow resize-none ${formState?.errors?.message
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
-                        }`}
+                          }`}
                         placeholder="สนใจดูทรัพย์สิน, ต้องการข้อมูลเพิ่มเติม..."
                       />
                       {formState?.errors?.message && (

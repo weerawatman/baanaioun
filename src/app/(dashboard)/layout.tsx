@@ -1,4 +1,4 @@
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/shared/components/layout/Sidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 export default function DashboardLayout({

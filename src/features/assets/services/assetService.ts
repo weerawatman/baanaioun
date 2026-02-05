@@ -8,7 +8,7 @@ export interface AssetFilters {
     search?: string;
 }
 
-export type CreateAssetInput = Omit<Asset, 'id' | 'created_at'>;
+export type CreateAssetInput = Omit<Asset, 'id' | 'created_at' | 'asset_code'>;
 export type UpdateAssetInput = Partial<CreateAssetInput>;
 
 /**
@@ -27,6 +27,7 @@ export class AssetService {
                 .from('assets')
                 .select(`
           id,
+          asset_code,
           name,
           title_deed_number,
           property_type,
@@ -56,7 +57,16 @@ export class AssetService {
                 query = query.or(`name.ilike.%${filters.search}%,title_deed_number.ilike.%${filters.search}%`);
             }
 
-            const { data, error } = await query;
+            // Create a promise that rejects in 10 seconds
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new AppError('Request timed out', ErrorCodes.NETWORK_ERROR, 408)), 10000);
+            });
+
+            // Race the query against the timeout
+            const { data, error } = await Promise.race([
+                query,
+                timeoutPromise
+            ]) as any;
 
             if (error) {
                 logger.error('Error fetching assets', error);

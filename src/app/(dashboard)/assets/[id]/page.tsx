@@ -3,62 +3,22 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { supabase } from '@/lib/supabase';
-import { Asset, AssetImage, PropertyType, AssetStatus, ImageCategory, RenovationProject } from '@/types/database';
-import ProjectTimelineGallery from '@/components/ProjectTimelineGallery';
+import { Asset, AssetImage, ImageCategory, RenovationProject } from '@/types/database';
+import ProjectTimelineGallery from '@/features/assets/components/ProjectTimelineGallery';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatCurrency, formatDate, handleError, PROPERTY_TYPE_LABELS, ASSET_STATUS_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
+import { StatusBadge, Spinner } from '@/shared/components/ui';
+import { assetService } from '@/features/assets/services/assetService';
+import { imageService } from '@/features/assets/services/imageService';
+import { renovationService } from '@/features/renovations/services/renovationService';
 
 // Dynamic import for modal - loads only when needed
-const AddAssetModal = dynamic(() => import('@/components/AddAssetModal'), {
+const AddAssetModal = dynamic(() => import('@/features/assets/components/AddAssetModal'), {
   loading: () => null,
 });
 
-export const runtime = 'edge';
 
-const propertyTypeLabels: Record<PropertyType, string> = {
-  land: 'ที่ดินเปล่า',
-  house: 'บ้านเดี่ยว',
-  semi_detached_house: 'บ้านแฝด',
-  condo: 'คอนโดมิเนียม',
-  townhouse: 'ทาวน์เฮาส์',
-  commercial: 'อาคารพาณิชย์',
-  other: 'อื่นๆ',
-};
-
-const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> = {
-  developing: { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  ready_for_sale: { label: 'พร้อมขาย', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  ready_for_rent: { label: 'พร้อมเช่า', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  rented: { label: 'มีคนเช่าอยู่', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  sold: { label: 'ขายไปแล้ว', color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
-};
-
-const imageCategoryLabels: Record<ImageCategory, { label: string; color: string }> = {
-  purchase: { label: 'รูปตอนซื้อ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  before_renovation: { label: 'ก่อนรีโนเวท', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  in_progress: { label: 'ระหว่างดำเนินการ', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' },
-  after_renovation: { label: 'หลังรีโนเวท', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  final: { label: 'รูปสุดท้าย', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' },
-};
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
 
 export default function AssetDetailPage() {
   const params = useParams();
@@ -79,45 +39,30 @@ export default function AssetDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchAsset = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('assets')
-      .select('*')
-      .eq('id', assetId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching asset:', error);
-      router.push('/assets');
-    } else {
+    try {
+      const data = await assetService.getAssetById(assetId);
       setAsset(data);
+    } catch (err) {
+      handleError(err);
+      router.push('/assets');
     }
   }, [assetId, router]);
 
   const fetchImages = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('asset_images')
-      .select('*')
-      .eq('asset_id', assetId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching images:', error);
-    } else {
-      setImages(data || []);
+    try {
+      const data = await imageService.getImagesByAssetId(assetId);
+      setImages(data);
+    } catch (err) {
+      handleError(err);
     }
   }, [assetId]);
 
   const fetchActiveProjects = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('renovation_projects')
-      .select('*')
-      .eq('asset_id', assetId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching projects:', error);
-    } else {
-      setActiveProjects(data || []);
+    try {
+      const data = await renovationService.getRenovations({ assetId });
+      setActiveProjects(data);
+    } catch (err) {
+      handleError(err);
     }
   }, [assetId]);
 
@@ -154,7 +99,9 @@ export default function AssetDetailPage() {
     setUploading(true);
 
     try {
-      for (const file of Array.from(files)) {
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
         // Validate file type
         if (!file.type.startsWith('image/')) {
           alert(`ไฟล์ ${file.name} ไม่ใช่รูปภาพ`);
@@ -167,49 +114,26 @@ export default function AssetDetailPage() {
           continue;
         }
 
-        // Generate unique filename
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${assetId}/${selectedCategory}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-        // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('asset-files')
-          .upload(fileName, file);
-
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          alert(`ไม่สามารถอัปโหลด ${file.name}: ${uploadError.message}`);
-          continue;
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('asset-files')
-          .getPublicUrl(fileName);
-
-        // Save to database
-        const { error: dbError } = await supabase.from('asset_images').insert({
-          asset_id: assetId,
-          url: publicUrl,
-          category: selectedCategory,
-          is_primary: images.length === 0,
-          renovation_project_id: selectedProject || null,
-        });
-
-        if (dbError) {
-          console.error('Database error:', dbError);
-          alert(`ไม่สามารถบันทึกข้อมูล: ${dbError.message}`);
+        try {
+          await imageService.uploadImage(
+            file,
+            assetId,
+            selectedCategory,
+            images.length === 0 && i === 0,
+            selectedProject,
+          );
+        } catch (err) {
+          const appError = handleError(err);
+          alert(appError.message);
         }
       }
 
-      // Refresh images
       await fetchImages();
     } catch (err) {
-      console.error('Error:', err);
+      handleError(err);
       alert('เกิดข้อผิดพลาดในการอัปโหลด');
     } finally {
       setUploading(false);
-      // Reset file input
       e.target.value = '';
     }
   };
@@ -218,20 +142,10 @@ export default function AssetDetailPage() {
     if (!confirm('ต้องการลบรูปภาพนี้หรือไม่?')) return;
 
     try {
-      // Extract file path from URL
-      const urlParts = image.url.split('/asset-files/');
-      if (urlParts.length > 1) {
-        const filePath = urlParts[1];
-        await supabase.storage.from('asset-files').remove([filePath]);
-      }
-
-      // Delete from database
-      await supabase.from('asset_images').delete().eq('id', image.id);
-
-      // Refresh images
+      await imageService.deleteImage(image);
       await fetchImages();
     } catch (err) {
-      console.error('Error deleting image:', err);
+      handleError(err);
       alert('เกิดข้อผิดพลาดในการลบรูปภาพ');
     }
   };
@@ -281,12 +195,10 @@ export default function AssetDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold text-warm-900 dark:text-warm-50">{asset.name}</h1>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
-                {assetStatusLabels[asset.status]?.label}
-              </span>
+              <StatusBadge label={ASSET_STATUS_LABELS[asset.status]?.label} color={ASSET_STATUS_LABELS[asset.status]?.color} />
             </div>
             <p className="text-warm-600 dark:text-warm-400 mt-1">
-              เลขที่โฉนด: {asset.title_deed_number} | {propertyTypeLabels[asset.property_type]}
+              เลขที่โฉนด: {asset.title_deed_number} | {PROPERTY_TYPE_LABELS[asset.property_type].label}
             </p>
           </div>
           {isAdmin && (
@@ -407,7 +319,7 @@ export default function AssetDetailPage() {
                   onChange={(e) => setSelectedCategory(e.target.value as ImageCategory)}
                   className="px-3 py-2 text-sm border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500"
                 >
-                  {(Object.entries(imageCategoryLabels) as [ImageCategory, { label: string }][]).map(([key, { label }]) => (
+                  {(Object.entries(IMAGE_CATEGORY_LABELS) as [ImageCategory, { label: string }][]).map(([key, { label }]) => (
                     <option key={key} value={key}>{label}</option>
                   ))}
                 </select>
@@ -428,10 +340,7 @@ export default function AssetDetailPage() {
                 <label className="px-4 py-2 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors cursor-pointer flex items-center gap-2">
                   {uploading ? (
                     <>
-                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      <Spinner size="sm" />
                       กำลังอัปโหลด...
                     </>
                   ) : (
@@ -467,7 +376,7 @@ export default function AssetDetailPage() {
                   >
                     ทั้งหมด ({images.length})
                   </button>
-                  {(Object.entries(imageCategoryLabels) as [ImageCategory, { label: string; color: string }][]).map(([key, { label }]) => {
+                  {(Object.entries(IMAGE_CATEGORY_LABELS) as [ImageCategory, { label: string; color: string }][]).map(([key, { label }]) => {
                     const count = images.filter(img => img.category === key).length;
                     return (
                       <button
@@ -508,8 +417,8 @@ export default function AssetDetailPage() {
                             loading="lazy"
                           />
                         </div>
-                        <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${imageCategoryLabels[image.category]?.color}`}>
-                          {imageCategoryLabels[image.category]?.label}
+                        <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${IMAGE_CATEGORY_LABELS[image.category]?.color}`}>
+                          {IMAGE_CATEGORY_LABELS[image.category]?.label}
                         </span>
                         {isAdmin && (
                           <button
@@ -531,7 +440,7 @@ export default function AssetDetailPage() {
                 images={images}
                 onImageClick={(url) => setLightboxImage(url)}
                 onDeleteImage={handleDeleteImage}
-                imageCategoryLabels={imageCategoryLabels}
+                imageCategoryLabels={IMAGE_CATEGORY_LABELS}
                 isAdmin={isAdmin}
               />
             )}

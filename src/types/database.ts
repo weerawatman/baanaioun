@@ -26,6 +26,7 @@ export type ProjectType = 'renovation' | 'new_construction';
 export interface Asset {
   id: string;
   created_at: string;
+  asset_code: string;
   title_deed_number: string;
   name: string;
   address?: string | null;

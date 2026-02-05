@@ -27,35 +27,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let initialLoad = true;
+
+    const fetchProfile = async (userId: string) => {
+      const { data } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      setProfile(data);
+    };
+
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
 
       if (session?.user) {
-        const { data } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        setProfile(data);
+        await fetchProfile(session.user.id);
       }
 
       setLoading(false);
+      initialLoad = false;
     };
 
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // Skip the initial INITIAL_SESSION event to avoid double fetch
+        if (initialLoad) return;
+
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          const { data } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          setProfile(data);
+          await fetchProfile(session.user.id);
         } else {
           setProfile(null);
         }

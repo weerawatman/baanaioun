@@ -3,61 +3,16 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType, AssetStatus } from '@/types/database';
-import AddRenovationProjectModal from '@/components/AddRenovationProjectModal';
-import AddExpenseModal from '@/components/AddExpenseModal';
-
-const statusLabels: Record<RenovationStatus, { label: string; color: string }> = {
-  planned: { label: 'วางแผน', color: 'bg-warm-100 text-warm-800 dark:bg-warm-700 dark:text-warm-300' },
-  in_progress: { label: 'กำลังดำเนินการ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  completed: { label: 'เสร็จสิ้น', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  cancelled: { label: 'ยกเลิก', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-};
-
-const categoryLabels: Record<ExpenseCategory, { label: string; color: string; group: 'general' | 'construction' }> = {
-  // General categories
-  materials: { label: 'ค่าวัสดุ', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', group: 'general' },
-  labor: { label: 'ค่าแรง', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', group: 'general' },
-  service: { label: 'ค่าบริการช่าง', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400', group: 'general' },
-  electricity: { label: 'ค่าไฟฟ้า', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', group: 'general' },
-  // Construction-specific categories
-  land_filling: { label: 'ถมดิน', color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', group: 'construction' },
-  building_permit: { label: 'ขออนุญาต', color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', group: 'construction' },
-  foundation: { label: 'งานฐานราก', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400', group: 'construction' },
-  architect_fee: { label: 'ค่าสถาปนิก', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400', group: 'construction' },
-};
-
-const projectTypeLabels: Record<ProjectType, { label: string; color: string; icon: string }> = {
-  renovation: { label: 'ปรับปรุง', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: '🔧' },
-  new_construction: { label: 'สร้างใหม่', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', icon: '🏗️' },
-};
-
-const propertyTypeLabels: Record<PropertyType, string> = {
-  land: 'ที่ดิน',
-  house: 'บ้านเดี่ยว',
-  semi_detached_house: 'บ้านแฝด',
-  condo: 'คอนโดมิเนียม',
-  townhouse: 'ทาวน์เฮ้าส์',
-  commercial: 'อาคารพาณิชย์',
-  other: 'อื่นๆ',
-};
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
-
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return '-';
-  return new Date(dateString).toLocaleDateString('th-TH', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
+import AddRenovationProjectModal from '@/features/renovations/components/AddRenovationProjectModal';
+import AddExpenseModal from '@/features/expenses/components/AddExpenseModal';
+import {
+  formatCurrency,
+  formatDateShort as formatDate,
+  RENOVATION_STATUS_LABELS,
+  EXPENSE_CATEGORY_LABELS,
+  PROJECT_TYPE_LABELS,
+  PROPERTY_TYPE_LABELS,
+} from '@/shared/utils';
 
 interface ProjectCardProps {
   project: RenovationProjectWithAsset;
@@ -97,15 +52,15 @@ function ProjectCard({
               <h3 className="text-lg font-semibold text-warm-900 dark:text-warm-50">
                 {project.name}
               </h3>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${projectTypeLabels[project.project_type || 'renovation'].color}`}>
-                {projectTypeLabels[project.project_type || 'renovation'].icon} {projectTypeLabels[project.project_type || 'renovation'].label}
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${PROJECT_TYPE_LABELS[project.project_type || 'renovation'].color}`}>
+                {PROJECT_TYPE_LABELS[project.project_type || 'renovation'].icon} {PROJECT_TYPE_LABELS[project.project_type || 'renovation'].label}
               </span>
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${statusLabels[project.status].color}`}>
-                {statusLabels[project.status].label}
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${RENOVATION_STATUS_LABELS[project.status].color}`}>
+                {RENOVATION_STATUS_LABELS[project.status].label}
               </span>
               {project.project_type === 'new_construction' && project.target_property_type && (
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
-                  → {propertyTypeLabels[project.target_property_type]}
+                  → {PROPERTY_TYPE_LABELS[project.target_property_type].label}
                 </span>
               )}
             </div>
@@ -266,7 +221,7 @@ function ProjectCard({
             {/* General Categories */}
             <p className="text-xs text-warm-500 dark:text-warm-400 mb-2">ทั่วไป</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
+              {(Object.entries(EXPENSE_CATEGORY_LABELS) as [ExpenseCategory, { label: string; color: string; group: string }][])
                 .filter(([, { group }]) => group === 'general')
                 .map(([key, { label, color }]) => (
                   <div
@@ -286,7 +241,7 @@ function ProjectCard({
             {/* Construction Categories */}
             <p className="text-xs text-warm-500 dark:text-warm-400 mb-2">งานก่อสร้าง</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {(Object.entries(categoryLabels) as [ExpenseCategory, { label: string; color: string; group: string }][])
+              {(Object.entries(EXPENSE_CATEGORY_LABELS) as [ExpenseCategory, { label: string; color: string; group: string }][])
                 .filter(([, { group }]) => group === 'construction')
                 .map(([key, { label, color }]) => (
                   <div
@@ -352,8 +307,8 @@ function ProjectCard({
                           {formatDate(expense.date)}
                         </td>
                         <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${categoryLabels[expense.category as ExpenseCategory]?.color || 'bg-warm-100 text-warm-800'}`}>
-                            {categoryLabels[expense.category as ExpenseCategory]?.label || expense.category}
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium ${EXPENSE_CATEGORY_LABELS[expense.category as ExpenseCategory]?.color || 'bg-warm-100 text-warm-800'}`}>
+                            {EXPENSE_CATEGORY_LABELS[expense.category as ExpenseCategory]?.label || expense.category}
                           </span>
                         </td>
                         <td className="py-3 text-warm-900 dark:text-warm-50">
@@ -486,8 +441,8 @@ export default function RenovationsPage() {
     if (project.project_type === 'new_construction' && project.target_property_type) {
       // Suggest a new name based on property type
       const suggestedName = project.assets?.name
-        ? project.assets.name.replace(/ที่ดิน|Land/gi, propertyTypeLabels[project.target_property_type])
-        : `${propertyTypeLabels[project.target_property_type]} - ${project.name}`;
+        ? project.assets.name.replace(/ที่ดิน|Land/gi, PROPERTY_TYPE_LABELS[project.target_property_type].label)
+        : `${PROPERTY_TYPE_LABELS[project.target_property_type].label} - ${project.name}`;
       setCompletionModal({
         project,
         show: true,
@@ -804,7 +759,7 @@ export default function RenovationsPage() {
                   <div className="text-center">
                     <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">ประเภทเดิม</p>
                     <span className="px-2 py-1 bg-warm-200 dark:bg-warm-700 rounded text-warm-800 dark:text-warm-200">
-                      {propertyTypeLabels[completionModal.project.assets?.property_type || 'land']}
+                      {PROPERTY_TYPE_LABELS[completionModal.project.assets?.property_type || 'land'].label}
                     </span>
                   </div>
                   <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -813,7 +768,7 @@ export default function RenovationsPage() {
                   <div className="text-center">
                     <p className="text-warm-500 dark:text-warm-400 text-xs mb-1">ประเภทใหม่</p>
                     <span className="px-2 py-1 bg-green-200 dark:bg-green-900/50 rounded text-green-800 dark:text-green-200">
-                      {propertyTypeLabels[completionModal.project.target_property_type!]}
+                      {PROPERTY_TYPE_LABELS[completionModal.project.target_property_type!].label}
                     </span>
                   </div>
                 </div>
@@ -875,7 +830,7 @@ export default function RenovationsPage() {
                   เมื่อคลิก &quot;อัปเดตทรัพย์สิน&quot; ระบบจะ:
                 </p>
                 <ul className="mt-2 text-sm text-warm-600 dark:text-warm-400 list-disc list-inside space-y-1">
-                  <li>เปลี่ยนประเภททรัพย์สินเป็น <strong className="text-green-600 dark:text-green-400">{propertyTypeLabels[completionModal.project.target_property_type!]}</strong></li>
+                  <li>เปลี่ยนประเภททรัพย์สินเป็น <strong className="text-green-600 dark:text-green-400">{PROPERTY_TYPE_LABELS[completionModal.project.target_property_type!].label}</strong></li>
                   <li>เปลี่ยนสถานะเป็น <strong className="text-green-600 dark:text-green-400">พร้อมใช้งาน (owned)</strong></li>
                   {completionModal.updateAssetName && completionModal.newAssetName.trim() && (
                     <li>เปลี่ยนชื่อเป็น <strong className="text-green-600 dark:text-green-400">{completionModal.newAssetName}</strong></li>

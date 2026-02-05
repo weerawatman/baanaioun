@@ -3,32 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { PublicAsset, PropertyType } from '@/types/database';
+import { PublicAsset } from '@/types/database';
 import Link from 'next/link';
+import { formatCurrency, PROPERTY_TYPE_LABELS } from '@/shared/utils';
 
-export const runtime = 'edge';
 
-const propertyTypeLabels: Record<PropertyType, { label: string; icon: string }> = {
-  land: { label: 'ที่ดินเปล่า', icon: '🏞️' },
-  house: { label: 'บ้านเดี่ยว', icon: '🏠' },
-  semi_detached_house: { label: 'บ้านแฝด', icon: '🏘️' },
-  condo: { label: 'คอนโดมิเนียม', icon: '🏢' },
-  townhouse: { label: 'ทาวน์เฮาส์', icon: '🏡' },
-  commercial: { label: 'อาคารพาณิชย์', icon: '🏬' },
-  other: { label: 'อื่นๆ', icon: '📦' },
-};
 
 interface ListingWithImage extends PublicAsset {
   primary_image_url?: string | null;
-}
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 export default function ListingsPage() {
@@ -158,8 +140,8 @@ export default function ListingsPage() {
                   )}
                   {/* Property type badge */}
                   <span className="absolute top-3 left-3 px-3 py-1 text-xs font-medium rounded-full bg-white/90 dark:bg-warm-900/90 text-warm-700 dark:text-warm-300 backdrop-blur-sm">
-                    {propertyTypeLabels[listing.property_type]?.icon}{' '}
-                    {propertyTypeLabels[listing.property_type]?.label}
+                    {PROPERTY_TYPE_LABELS[listing.property_type]?.icon}{' '}
+                    {PROPERTY_TYPE_LABELS[listing.property_type]?.label}
                   </span>
                 </div>
 
@@ -207,11 +189,11 @@ export default function ListingsPage() {
                       </div>
                     )}
                     {(!listing.selling_price || listing.selling_price <= 0) &&
-                     (!listing.rental_price || listing.rental_price <= 0) && (
-                      <p className="text-sm text-warm-400 dark:text-warm-500 italic">
-                        สอบถามราคา
-                      </p>
-                    )}
+                      (!listing.rental_price || listing.rental_price <= 0) && (
+                        <p className="text-sm text-warm-400 dark:text-warm-500 italic">
+                          สอบถามราคา
+                        </p>
+                      )}
                   </div>
 
                   {/* View Details button */}

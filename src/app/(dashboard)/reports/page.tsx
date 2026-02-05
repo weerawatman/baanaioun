@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Asset, Income, Expense, ExpenseCategory } from '@/types/database';
-import AddIncomeModal from '@/components/AddIncomeModal';
+import AddIncomeModal from '@/features/income/components/AddIncomeModal';
 
 interface AssetFinancialSummary {
   asset: Asset;

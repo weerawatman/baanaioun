@@ -18,7 +18,8 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(if not exist \"C:\\\\Projects\\\\baanaioun\\\\src\\\\contexts\" mkdir \"C:\\\\Projects\\\\baanaioun\\\\src\\\\contexts\")",
-      "Bash(npx next lint:*)"
+      "Bash(npx next lint:*)",
+      "Bash(dir /s /b C:Projectsbaanaiounsrcfeatures)"
     ]
   }
 }

@@ -3,35 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { PropertyType, AssetStatus } from '@/types/database';
+import { AssetStatus } from '@/types/database';
 import { useAssets, useAssetFilters } from '@/features/assets/hooks';
 import { useLocalStorage } from '@/shared/hooks';
-import { formatCurrency, formatDate, isDateExpired } from '@/shared/utils';
+import { formatCurrency, formatDate, isDateExpired, PROPERTY_TYPE_LABELS, ASSET_STATUS_LABELS } from '@/shared/utils';
 
 // Dynamic import for modal - loads only when needed
-const AddAssetModal = dynamic(() => import('@/components/AddAssetModal'), {
+const AddAssetModal = dynamic(() => import('@/features/assets/components/AddAssetModal'), {
   loading: () => null,
 });
 
-export const runtime = 'edge';
 
-const propertyTypeLabels: Record<PropertyType, { label: string; icon: string }> = {
-  land: { label: 'ที่ดินเปล่า', icon: '🏞️' },
-  house: { label: 'บ้านเดี่ยว', icon: '🏠' },
-  semi_detached_house: { label: 'บ้านแฝด', icon: '🏘️' },
-  condo: { label: 'คอนโดมิเนียม', icon: '🏢' },
-  townhouse: { label: 'ทาวน์เฮาส์', icon: '🏡' },
-  commercial: { label: 'อาคารพาณิชย์', icon: '🏬' },
-  other: { label: 'อื่นๆ', icon: '📦' },
-};
-
-const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> = {
-  developing: { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  ready_for_sale: { label: 'พร้อมขาย', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  ready_for_rent: { label: 'พร้อมเช่า', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  rented: { label: 'มีคนเช่าอยู่', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  sold: { label: 'ขายไปแล้ว', color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
-};
 
 export default function AssetsPage() {
   const router = useRouter();
@@ -182,6 +164,18 @@ export default function AssetsPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm flex items-center gap-3">
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+          <span>เกิดข้อผิดพลาดในการโหลดข้อมูล: {error.message}</span>
+          <button onClick={() => refetch()} className="ml-auto text-red-700 dark:text-red-300 hover:underline font-medium">
+            ลองใหม่
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -217,7 +211,7 @@ export default function AssetsPage() {
           <div className="p-8 text-center">
             <div className="text-4xl mb-4">🏠</div>
             <p className="text-warm-500 dark:text-warm-400">
-              {statusFilter === 'all' ? 'ไม่พบทรัพย์สิน' : `ไม่พบทรัพย์สินที่มีสถานะ "${assetStatusLabels[statusFilter as AssetStatus]?.label}"`}
+              {statusFilter === 'all' ? 'ไม่พบทรัพย์สิน' : `ไม่พบทรัพย์สินที่มีสถานะ "${ASSET_STATUS_LABELS[statusFilter as AssetStatus]?.label}"`}
             </p>
             <p className="text-sm text-warm-400 dark:text-warm-500 mt-1">
               {statusFilter === 'all' ? 'เพิ่มทรัพย์สินแรกของคุณเพื่อเริ่มต้นใช้งาน' : 'ลองเลือกตัวกรองอื่นหรือเพิ่มทรัพย์สินใหม่'}
@@ -238,7 +232,7 @@ export default function AssetsPage() {
                   {/* Card Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3 flex-1">
-                      <span className="text-2xl">{propertyTypeLabels[asset.property_type]?.icon}</span>
+                      <span className="text-2xl">{PROPERTY_TYPE_LABELS[asset.property_type]?.icon}</span>
                       <div className="flex-1">
                         <h3 className="font-semibold text-warm-900 dark:text-warm-50">{asset.name}</h3>
                         <p className="text-sm text-warm-500 dark:text-warm-400">
@@ -257,15 +251,15 @@ export default function AssetsPage() {
                         </svg>
                       </button>
                       <span className="px-2 py-1 text-xs font-medium rounded-lg bg-warm-100 dark:bg-warm-800 text-warm-600 dark:text-warm-400">
-                        {propertyTypeLabels[asset.property_type]?.label}
+                        {PROPERTY_TYPE_LABELS[asset.property_type]?.label}
                       </span>
                     </div>
                   </div>
 
                   {/* Status Badge */}
                   <div className="mb-3">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
-                      {assetStatusLabels[asset.status]?.label}
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${ASSET_STATUS_LABELS[asset.status]?.color}`}>
+                      {ASSET_STATUS_LABELS[asset.status]?.label}
                     </span>
                   </div>
 
@@ -371,18 +365,18 @@ export default function AssetsPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <span>{propertyTypeLabels[asset.property_type]?.icon}</span>
+                            <span>{PROPERTY_TYPE_LABELS[asset.property_type]?.icon}</span>
                             <div>
                               <div className="text-warm-900 dark:text-warm-50">{asset.name}</div>
                               <div className="text-sm text-warm-500 dark:text-warm-400">
-                                {propertyTypeLabels[asset.property_type]?.label || asset.property_type}
+                                {PROPERTY_TYPE_LABELS[asset.property_type]?.label || asset.property_type}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${assetStatusLabels[asset.status]?.color}`}>
-                            {assetStatusLabels[asset.status]?.label}
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${ASSET_STATUS_LABELS[asset.status]?.color}`}>
+                            {ASSET_STATUS_LABELS[asset.status]?.label}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-warm-900 dark:text-warm-50">

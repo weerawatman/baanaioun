@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseCategory } from '@/types/database';
+import { EXPENSE_CATEGORY_OPTIONS } from '@/shared/utils';
+import { Spinner } from '@/shared/components/ui';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -11,19 +13,6 @@ interface AddExpenseModalProps {
   renovationProjectId: string;
   assetId: string;
 }
-
-const expenseCategories: { value: ExpenseCategory; label: string; icon: string; group: 'general' | 'construction' }[] = [
-  // General categories
-  { value: 'materials', label: 'ค่าวัสดุ', icon: '🧱', group: 'general' },
-  { value: 'labor', label: 'ค่าแรง', icon: '👷', group: 'general' },
-  { value: 'service', label: 'ค่าบริการช่าง', icon: '🔧', group: 'general' },
-  { value: 'electricity', label: 'ค่าไฟฟ้า', icon: '⚡', group: 'general' },
-  // Construction-specific categories
-  { value: 'land_filling', label: 'ถมดิน', icon: '🚜', group: 'construction' },
-  { value: 'building_permit', label: 'ขออนุญาต', icon: '📋', group: 'construction' },
-  { value: 'foundation', label: 'งานฐานราก', icon: '🏗️', group: 'construction' },
-  { value: 'architect_fee', label: 'ค่าสถาปนิก', icon: '📐', group: 'construction' },
-];
 
 export default function AddExpenseModal({
   isOpen,
@@ -87,8 +76,8 @@ export default function AddExpenseModal({
 
   if (!isOpen) return null;
 
-  const generalCategories = expenseCategories.filter(c => c.group === 'general');
-  const constructionCategories = expenseCategories.filter(c => c.group === 'construction');
+  const generalCategories = EXPENSE_CATEGORY_OPTIONS.filter(c => c.group === 'general');
+  const constructionCategories = EXPENSE_CATEGORY_OPTIONS.filter(c => c.group === 'construction');
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50">
@@ -256,10 +245,7 @@ export default function AddExpenseModal({
               >
                 {loading ? (
                   <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
+                    <Spinner size="sm" />
                     กำลังบันทึก...
                   </>
                 ) : (
