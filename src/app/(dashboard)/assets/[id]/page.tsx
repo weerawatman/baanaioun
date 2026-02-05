@@ -2,11 +2,17 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { Asset, AssetImage, PropertyType, AssetStatus, ImageCategory, RenovationProject } from '@/types/database';
 import ProjectTimelineGallery from '@/components/ProjectTimelineGallery';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+
+// Dynamic import for modal - loads only when needed
+const AddAssetModal = dynamic(() => import('@/components/AddAssetModal'), {
+  loading: () => null,
+});
 
 export const runtime = 'edge';
 
@@ -21,11 +27,11 @@ const propertyTypeLabels: Record<PropertyType, string> = {
 };
 
 const assetStatusLabels: Record<AssetStatus, { label: string; color: string }> = {
-  developing:     { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-  ready_for_sale: { label: 'พร้อมขาย',       color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-  ready_for_rent: { label: 'พร้อมเช่า',       color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-  rented:         { label: 'มีคนเช่าอยู่',    color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
-  sold:           { label: 'ขายไปแล้ว',       color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
+  developing: { label: 'ว่างรอการพัฒนา', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+  ready_for_sale: { label: 'พร้อมขาย', color: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+  ready_for_rent: { label: 'พร้อมเช่า', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+  rented: { label: 'มีคนเช่าอยู่', color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' },
+  sold: { label: 'ขายไปแล้ว', color: 'bg-warm-200 text-warm-700 dark:bg-warm-700 dark:text-warm-300' },
 };
 
 const imageCategoryLabels: Record<ImageCategory, { label: string; color: string }> = {
@@ -70,6 +76,7 @@ export default function AssetDetailPage() {
   const [activeProjects, setActiveProjects] = useState<RenovationProject[]>([]);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'timeline'>('grid');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const fetchAsset = useCallback(async () => {
     const { data, error } = await supabase
@@ -282,6 +289,17 @@ export default function AssetDetailPage() {
               เลขที่โฉนด: {asset.title_deed_number} | {propertyTypeLabels[asset.property_type]}
             </p>
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-primary-500 text-white rounded-xl hover:bg-primary-600 transition-colors font-medium"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              แก้ไขข้อมูล
+            </button>
+          )}
         </div>
       </div>
 
@@ -359,11 +377,10 @@ export default function AssetDetailPage() {
                 <div className="flex items-center bg-warm-100 dark:bg-warm-800 rounded-xl p-1">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                      viewMode === 'grid'
-                        ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
-                        : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
-                    }`}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${viewMode === 'grid'
+                      ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
+                      : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
+                      }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -371,11 +388,10 @@ export default function AssetDetailPage() {
                   </button>
                   <button
                     onClick={() => setViewMode('timeline')}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                      viewMode === 'timeline'
-                        ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
-                        : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
-                    }`}
+                    className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${viewMode === 'timeline'
+                      ? 'bg-white dark:bg-warm-700 text-warm-900 dark:text-warm-50 shadow-sm'
+                      : 'text-warm-600 dark:text-warm-400 hover:text-warm-900 dark:hover:text-warm-50'
+                      }`}
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -444,11 +460,10 @@ export default function AssetDetailPage() {
                 <div className="flex gap-2 mb-6 border-b border-warm-200 dark:border-warm-700 pb-4 flex-wrap">
                   <button
                     onClick={() => setActiveTab('all')}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                      activeTab === 'all'
-                        ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
-                        : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
-                    }`}
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === 'all'
+                      ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
+                      : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
+                      }`}
                   >
                     ทั้งหมด ({images.length})
                   </button>
@@ -458,11 +473,10 @@ export default function AssetDetailPage() {
                       <button
                         key={key}
                         onClick={() => setActiveTab(key)}
-                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                          activeTab === key
-                            ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
-                            : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
-                        }`}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${activeTab === key
+                          ? 'bg-warm-900 dark:bg-warm-50 text-white dark:text-warm-900'
+                          : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
+                          }`}
                       >
                         {label} ({count})
                       </button>
@@ -491,6 +505,7 @@ export default function AssetDetailPage() {
                             src={image.url}
                             alt={image.caption || 'Asset image'}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            loading="lazy"
                           />
                         </div>
                         <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${imageCategoryLabels[image.category]?.color}`}>
@@ -543,9 +558,26 @@ export default function AssetDetailPage() {
             alt="Full size"
             className="max-w-full max-h-full object-contain"
             onClick={(e) => e.stopPropagation()}
+            loading="lazy"
           />
         </div>
       )}
+
+      {/* Edit Asset Modal */}
+      <AddAssetModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          // Refresh asset data after edit
+          fetchAsset();
+        }}
+        onSuccess={() => {
+          // Refresh asset data after successful edit
+          fetchAsset();
+        }}
+        asset={asset}
+        mode="edit"
+      />
     </div>
   );
 }
