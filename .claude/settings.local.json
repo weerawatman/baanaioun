@@ -13,7 +13,12 @@
       "Bash(ls:*)",
       "Bash(powershell -Command:*)",
       "Bash(npm install:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(head:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(if not exist \"C:\\\\Projects\\\\baanaioun\\\\src\\\\contexts\" mkdir \"C:\\\\Projects\\\\baanaioun\\\\src\\\\contexts\")",
+      "Bash(npx next lint:*)"
     ]
   }
 }

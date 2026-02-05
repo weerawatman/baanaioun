@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -95,6 +96,18 @@ export default function LoginPage() {
               {loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+            <p className="text-sm text-warm-600 dark:text-warm-400">
+              ยังไม่มีบัญชี?{' '}
+              <Link
+                href="/signup"
+                className="text-primary-500 hover:text-primary-600 font-medium"
+              >
+                สร้างบัญชีใหม่
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
