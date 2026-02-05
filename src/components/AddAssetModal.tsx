@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { PropertyType, AssetStatus } from '@/types/database';
+import { PropertyType, AssetStatus, Asset } from '@/types/database';
 import MapPickerDynamic from './MapPickerDynamic';
 
 interface AddAssetModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  asset?: Asset | null;
+  mode?: 'add' | 'edit';
 }
 
 const propertyTypes: { value: PropertyType; label: string; icon: string }[] = [
@@ -29,24 +31,26 @@ const statusOptions: { value: AssetStatus; label: string }[] = [
   { value: 'sold', label: 'ขายไปแล้ว' },
 ];
 
-export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetModalProps) {
+export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode = 'add' }: AddAssetModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    title_deed_number: '',
-    name: '',
-    address: '',
-    property_type: 'land' as PropertyType,
-    status: 'developing' as AssetStatus,
-    purchase_price: '',
-    appraised_value: '',
-    mortgage_bank: '',
-    mortgage_amount: '',
-    location_lat_long: '',
-    fire_insurance_expiry: '',
-    land_tax_due_date: '',
-    notes: '',
+    title_deed_number: asset?.title_deed_number || '',
+    name: asset?.name || '',
+    address: asset?.address || '',
+    property_type: (asset?.property_type || 'land') as PropertyType,
+    status: (asset?.status || 'developing') as AssetStatus,
+    purchase_price: asset?.purchase_price?.toString() || '',
+    appraised_value: asset?.appraised_value?.toString() || '',
+    mortgage_bank: asset?.mortgage_bank || '',
+    mortgage_amount: asset?.mortgage_amount?.toString() || '',
+    location_lat_long: asset?.location_lat_long || '',
+    fire_insurance_expiry: asset?.fire_insurance_expiry || '',
+    land_tax_due_date: asset?.land_tax_due_date || '',
+    notes: asset?.notes || '',
+    tenant_name: asset?.tenant_name || '',
+    tenant_contact: asset?.tenant_contact || '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -60,7 +64,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
     setError(null);
 
     try {
-      const { error: insertError } = await supabase.from('assets').insert({
+      const dataToSave = {
         title_deed_number: formData.title_deed_number,
         name: formData.name || formData.title_deed_number,
         address: formData.address || null,
@@ -74,9 +78,24 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         location_lat_long: formData.location_lat_long || null,
         notes: formData.notes || null,
         status: formData.status,
-      });
+        tenant_name: formData.status === 'rented' ? (formData.tenant_name || null) : null,
+        tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
+      };
 
-      if (insertError) throw insertError;
+      if (mode === 'edit' && asset) {
+        const { error: updateError } = await supabase
+          .from('assets')
+          .update(dataToSave)
+          .eq('id', asset.id);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('assets')
+          .insert(dataToSave);
+
+        if (insertError) throw insertError;
+      }
 
       setFormData({
         title_deed_number: '',
@@ -92,6 +111,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         fire_insurance_expiry: '',
         land_tax_due_date: '',
         notes: '',
+        tenant_name: '',
+        tenant_contact: '',
       });
 
       onSuccess();
@@ -112,7 +133,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
         <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-warm-200 dark:border-warm-800">
           <div className="flex justify-between items-center">
             <h2 className="text-lg md:text-xl font-semibold text-warm-900 dark:text-warm-50">
-              เพิ่มทรัพย์สินใหม่
+              {mode === 'edit' ? 'แก้ไขทรัพย์สิน' : 'เพิ่มทรัพย์สินใหม่'}
             </h2>
             <button
               onClick={onClose}
@@ -187,11 +208,10 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
                       key={type.value}
                       type="button"
                       onClick={() => setFormData(prev => ({ ...prev, property_type: type.value }))}
-                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${
-                        formData.property_type === type.value
-                          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
-                          : 'border-warm-200 dark:border-warm-700 hover:border-warm-300 dark:hover:border-warm-600 text-warm-600 dark:text-warm-400'
-                      }`}
+                      className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all ${formData.property_type === type.value
+                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
+                        : 'border-warm-200 dark:border-warm-700 hover:border-warm-300 dark:hover:border-warm-600 text-warm-600 dark:text-warm-400'
+                        }`}
                     >
                       <span className="text-xl mb-1">{type.icon}</span>
                       <span className="text-xs font-medium text-center leading-tight">{type.label}</span>
@@ -368,6 +388,48 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess }: AddAssetMo
                 </div>
               </div>
             </div>
+
+            {/* Section: ข้อมูลผู้เช่า - Show only when status is 'rented' */}
+            {formData.status === 'rented' && (
+              <div className="space-y-4 pt-2">
+                <h3 className="text-sm font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">
+                  ข้อมูลผู้เช่า
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
+                      ชื่อผู้เช่า <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="tenant_name"
+                      value={formData.tenant_name}
+                      onChange={handleChange}
+                      required={formData.status === 'rented'}
+                      autoComplete="off"
+                      className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      placeholder="ชื่อ-นามสกุล ผู้เช่า"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
+                      เบอร์ติดต่อผู้เช่า
+                    </label>
+                    <input
+                      type="text"
+                      name="tenant_contact"
+                      value={formData.tenant_contact}
+                      onChange={handleChange}
+                      autoComplete="tel"
+                      className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      placeholder="เบอร์โทร / อีเมล"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Section: หมายเหตุ */}
             <div className="space-y-4 pt-2">

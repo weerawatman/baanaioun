@@ -43,6 +43,8 @@ export interface Asset {
   rental_price?: number | null;
   description?: string | null;
   location_lat_long?: string | null;
+  tenant_name?: string | null;
+  tenant_contact?: string | null;
 }
 
 export interface RenovationProject {
