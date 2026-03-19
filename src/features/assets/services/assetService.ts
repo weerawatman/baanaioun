@@ -8,6 +8,16 @@ export interface AssetFilters {
     search?: string;
 }
 
+export interface AssetPagination {
+    page: number;
+    pageSize: number;
+}
+
+export interface AssetsResult {
+    data: Asset[];
+    count: number;
+}
+
 export type CreateAssetInput = Omit<Asset, 'id' | 'created_at' | 'asset_code'>;
 export type UpdateAssetInput = Partial<CreateAssetInput>;
 
@@ -17,11 +27,11 @@ export type UpdateAssetInput = Partial<CreateAssetInput>;
  */
 export class AssetService {
     /**
-     * Fetch assets with optional filters
+     * Fetch assets with optional filters and server-side pagination
      */
-    async getAssets(filters?: AssetFilters): Promise<Asset[]> {
+    async getAssets(filters?: AssetFilters, pagination?: AssetPagination): Promise<AssetsResult> {
         try {
-            logger.info('Fetching assets', { filters });
+            logger.info('Fetching assets', { filters, pagination });
 
             let query = supabase
                 .from('assets')
@@ -41,7 +51,7 @@ export class AssetService {
           tenant_name,
           tenant_contact,
           created_at
-        `)
+        `, { count: 'exact' })
                 .order('created_at', { ascending: false });
 
             // Apply filters
@@ -57,7 +67,14 @@ export class AssetService {
                 query = query.or(`name.ilike.%${filters.search}%,title_deed_number.ilike.%${filters.search}%`);
             }
 
-            const { data, error } = await withTimeout(query);
+            // Apply server-side pagination
+            if (pagination) {
+                const from = (pagination.page - 1) * pagination.pageSize;
+                const to = from + pagination.pageSize - 1;
+                query = query.range(from, to);
+            }
+
+            const { data, error, count } = await withTimeout(query);
 
             if (error) {
                 logger.error('Error fetching assets', error);
@@ -70,9 +87,44 @@ export class AssetService {
             }
 
             logger.info('Assets fetched successfully', { count: data?.length || 0 });
-            return data || [];
+            return { data: data || [], count: count ?? 0 };
         } catch (error) {
             logger.error('Unexpected error in getAssets', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get asset count grouped by status (lightweight query for filter bar badges)
+     */
+    async getStatusCounts(): Promise<Record<AssetStatus | 'all', number>> {
+        try {
+            const { data, error } = await supabase
+                .from('assets')
+                .select('status');
+
+            if (error) {
+                logger.error('Error fetching status counts', error);
+                throw new AppError('Failed to fetch status counts', ErrorCodes.DATABASE_ERROR, 500, { originalError: error });
+            }
+
+            const counts: Record<string, number> = {
+                all: 0,
+                developing: 0,
+                ready_for_sale: 0,
+                ready_for_rent: 0,
+                rented: 0,
+                sold: 0,
+            };
+
+            for (const row of data || []) {
+                counts.all++;
+                if (row.status in counts) counts[row.status]++;
+            }
+
+            return counts as Record<AssetStatus | 'all', number>;
+        } catch (error) {
+            logger.error('Unexpected error in getStatusCounts', error);
             throw error;
         }
     }

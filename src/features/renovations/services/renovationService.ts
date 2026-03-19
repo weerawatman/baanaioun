@@ -25,7 +25,7 @@ export class RenovationService {
 
             let query = supabase
                 .from('renovation_projects')
-                .select('*')
+                .select('id, asset_id, name, description, start_date, end_date, budget, status, project_type, target_property_type, created_at')
                 .order('created_at', { ascending: false });
 
             // Apply filters

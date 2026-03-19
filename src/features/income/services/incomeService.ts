@@ -26,7 +26,7 @@ export class IncomeService {
 
             let query = supabase
                 .from('incomes')
-                .select('*')
+                .select('id, asset_id, source, amount, date, description, created_at')
                 .order('date', { ascending: false });
 
             // Apply filters

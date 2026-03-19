@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { Expense } from '@/types/database';
 import { expenseService, ExpenseFilters } from '../services/expenseService';
-import { handleError, logger } from '@/shared/utils';
 
 interface UseExpensesReturn {
     expenses: Expense[];
@@ -11,46 +11,34 @@ interface UseExpensesReturn {
 }
 
 /**
- * Custom hook for fetching expenses
+ * Custom hook for fetching expenses with SWR caching
  * @param filters - Optional filters for expenses
  * @returns Expenses data, loading state, error, and refetch function
  */
 export function useExpenses(filters?: ExpenseFilters): UseExpensesReturn {
-    const [expenses, setExpenses] = useState<Expense[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+    const key = [
+        'expenses',
+        filters?.category ?? null,
+        filters?.assetId ?? null,
+        filters?.renovationProjectId ?? null,
+        filters?.startDate ?? null,
+        filters?.endDate ?? null,
+    ];
 
-    const fetchExpenses = useCallback(async (showLoading = true) => {
-        if (showLoading) setLoading(true);
-        setError(null);
+    const { data, error, isLoading, mutate } = useSWR(
+        key,
+        () => expenseService.getExpenses(filters),
+        { revalidateOnFocus: false }
+    );
 
-        try {
-            const data = await expenseService.getExpenses(filters);
-            setExpenses(data);
-        } catch (err) {
-            const error = handleError(err);
-            setError(error);
-            logger.error('Error in useExpenses', err);
-        } finally {
-            if (showLoading) setLoading(false);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        filters?.category,
-        filters?.assetId,
-        filters?.renovationProjectId,
-        filters?.startDate,
-        filters?.endDate,
-    ]);
-
-    useEffect(() => {
-        fetchExpenses();
-    }, [fetchExpenses]);
+    const refetch = useCallback(async (_showLoading?: boolean) => {
+        await mutate();
+    }, [mutate]);
 
     return {
-        expenses,
-        loading,
-        error,
-        refetch: fetchExpenses,
+        expenses: data ?? [],
+        loading: isLoading,
+        error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+        refetch,
     };
 }

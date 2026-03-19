@@ -104,9 +104,25 @@ export default function ReportsPage() {
   }, [selectedYear]);
 
   const assetSummaries = useMemo((): AssetFinancialSummary[] => {
+    // Build index maps once O(n) — instead of .filter() per asset O(n×m)
+    const incomeByAsset = new Map<string, Income[]>();
+    const expenseByAsset = new Map<string, Expense[]>();
+
+    incomes.forEach(i => {
+      const list = incomeByAsset.get(i.asset_id) ?? [];
+      list.push(i);
+      incomeByAsset.set(i.asset_id, list);
+    });
+    expenses.forEach(e => {
+      if (!e.asset_id) return;
+      const list = expenseByAsset.get(e.asset_id) ?? [];
+      list.push(e);
+      expenseByAsset.set(e.asset_id, list);
+    });
+
     return assets.map(asset => {
-      const assetIncomes = incomes.filter(i => i.asset_id === asset.id);
-      const assetExpenses = expenses.filter(e => e.asset_id === asset.id);
+      const assetIncomes = incomeByAsset.get(asset.id) ?? [];
+      const assetExpenses = expenseByAsset.get(asset.id) ?? [];
 
       const totalIncome = assetIncomes.reduce((sum, i) => sum + i.amount, 0);
       const totalExpenses = assetExpenses.reduce((sum, e) => sum + e.amount, 0);

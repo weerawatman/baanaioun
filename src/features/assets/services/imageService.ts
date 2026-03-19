@@ -24,7 +24,7 @@ export class ImageService {
 
             const { data, error } = await supabase
                 .from('asset_images')
-                .select('*')
+                .select('id, asset_id, renovation_project_id, url, caption, is_primary, category, created_at')
                 .eq('asset_id', assetId)
                 .order('created_at', { ascending: false });
 

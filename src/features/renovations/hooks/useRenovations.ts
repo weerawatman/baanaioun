@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { RenovationProject } from '@/types/database';
 import { renovationService, RenovationFilters } from '../services/renovationService';
-import { handleError, logger } from '@/shared/utils';
 
 interface UseRenovationsReturn {
     renovations: RenovationProject[];
@@ -11,44 +11,32 @@ interface UseRenovationsReturn {
 }
 
 /**
- * Custom hook for fetching renovation projects
+ * Custom hook for fetching renovation projects with SWR caching
  * @param filters - Optional filters for renovations
  * @returns Renovations data, loading state, error, and refetch function
  */
 export function useRenovations(filters?: RenovationFilters): UseRenovationsReturn {
-    const [renovations, setRenovations] = useState<RenovationProject[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+    const key = [
+        'renovations',
+        filters?.status ?? null,
+        filters?.assetId ?? null,
+        filters?.projectType ?? null,
+    ];
 
-    const fetchRenovations = useCallback(async (showLoading = true) => {
-        if (showLoading) setLoading(true);
-        setError(null);
+    const { data, error, isLoading, mutate } = useSWR(
+        key,
+        () => renovationService.getRenovations(filters),
+        { revalidateOnFocus: false }
+    );
 
-        try {
-            const data = await renovationService.getRenovations(filters);
-            setRenovations(data);
-        } catch (err) {
-            const error = handleError(err);
-            setError(error);
-            logger.error('Error in useRenovations', err);
-        } finally {
-            if (showLoading) setLoading(false);
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        filters?.status,
-        filters?.assetId,
-        filters?.projectType,
-    ]);
-
-    useEffect(() => {
-        fetchRenovations();
-    }, [fetchRenovations]);
+    const refetch = useCallback(async (_showLoading?: boolean) => {
+        await mutate();
+    }, [mutate]);
 
     return {
-        renovations,
-        loading,
-        error,
-        refetch: fetchRenovations,
+        renovations: data ?? [],
+        loading: isLoading,
+        error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+        refetch,
     };
 }

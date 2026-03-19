@@ -1,58 +1,47 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import useSWR from 'swr';
 import { Asset } from '@/types/database';
-import { assetService, AssetFilters } from '../services/assetService';
-import { handleError, logger } from '@/shared/utils';
+import { assetService, AssetFilters, AssetPagination } from '../services/assetService';
 
 interface UseAssetsReturn {
     assets: Asset[];
     loading: boolean;
     error: Error | null;
+    totalCount: number;
     refetch: (showLoading?: boolean) => Promise<void>;
 }
 
 /**
- * Custom hook for fetching and managing assets
+ * Custom hook for fetching and managing assets with SWR caching and server-side pagination
  * @param filters - Optional filters to apply
- * @returns Assets data, loading state, error, and refetch function
+ * @param pagination - Optional server-side pagination params
+ * @returns Assets data, loading state, error, totalCount, and refetch function
  */
-export function useAssets(filters?: AssetFilters): UseAssetsReturn {
-    const [assets, setAssets] = useState<Asset[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<Error | null>(null);
+export function useAssets(filters?: AssetFilters, pagination?: AssetPagination): UseAssetsReturn {
+    const key = [
+        'assets',
+        filters?.status ?? null,
+        filters?.propertyType ?? null,
+        filters?.search ?? null,
+        pagination?.page ?? null,
+        pagination?.pageSize ?? null,
+    ];
 
-    const fetchAssets = useCallback(async (showLoading = true) => {
-        try {
-            if (showLoading) {
-                setLoading(true);
-            }
-            setError(null);
+    const { data: result, error, isLoading, mutate } = useSWR(
+        key,
+        () => assetService.getAssets(filters, pagination),
+        { revalidateOnFocus: false }
+    );
 
-            const data = await assetService.getAssets(filters);
-            setAssets(data);
-        } catch (err) {
-            const appError = handleError(err);
-            setError(appError);
-            logger.error('Error in useAssets', err);
-        } finally {
-            if (showLoading) {
-                setLoading(false);
-            }
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [
-        filters?.status,
-        filters?.propertyType,
-        filters?.search,
-    ]);
-
-    useEffect(() => {
-        fetchAssets();
-    }, [fetchAssets]);
+    const refetch = useCallback(async (_showLoading?: boolean) => {
+        await mutate();
+    }, [mutate]);
 
     return {
-        assets,
-        loading,
-        error,
-        refetch: fetchAssets,
+        assets: result?.data ?? [],
+        loading: isLoading,
+        error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+        totalCount: result?.count ?? 0,
+        refetch,
     };
 }

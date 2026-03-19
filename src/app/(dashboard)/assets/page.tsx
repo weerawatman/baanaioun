@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { AssetStatus } from '@/types/database';
-import { useAssets, useAssetFilters } from '@/features/assets/hooks';
+import { useAssets } from '@/features/assets/hooks';
+import { assetService } from '@/features/assets/services/assetService';
 import { useLocalStorage } from '@/shared/hooks';
 import { formatCurrency, formatDate, isDateExpired, PROPERTY_TYPE_LABELS, ASSET_STATUS_LABELS } from '@/shared/utils';
 
@@ -13,22 +14,44 @@ const AddAssetModal = dynamic(() => import('@/features/assets/components/AddAsse
   loading: () => null,
 });
 
-
+const PAGE_SIZE = 20;
+const DEFAULT_STATUS_COUNTS: Record<AssetStatus | 'all', number> = {
+  all: 0,
+  developing: 0,
+  ready_for_sale: 0,
+  ready_for_rent: 0,
+  rented: 0,
+  sold: 0,
+};
 
 export default function AssetsPage() {
   const router = useRouter();
 
-  // Use new custom hooks
-  const { assets, loading, error, refetch } = useAssets();
-  const {
-    paginatedAssets,
-    statusFilter,
-    setStatusFilter,
-    currentPage,
-    setCurrentPage,
-    totalPages,
-    statusCounts,
-  } = useAssetFilters(assets, 20);
+  // Filter + pagination state
+  const [statusFilter, setStatusFilter] = useState<AssetStatus | 'all'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusCounts, setStatusCounts] = useState<Record<AssetStatus | 'all', number>>(DEFAULT_STATUS_COUNTS);
+
+  const { assets, loading, error, refetch, totalCount } = useAssets(
+    { status: statusFilter !== 'all' ? statusFilter : undefined },
+    { page: currentPage, pageSize: PAGE_SIZE },
+  );
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
+  // Fetch lightweight status counts separately
+  const fetchStatusCounts = useCallback(async () => {
+    try {
+      const counts = await assetService.getStatusCounts();
+      setStatusCounts(counts);
+    } catch {
+      // non-critical — leave previous counts
+    }
+  }, []);
+
+  useEffect(() => { void fetchStatusCounts(); }, [fetchStatusCounts]);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => { setCurrentPage(1); }, [statusFilter]);
 
   // UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -54,6 +77,7 @@ export default function AssetsPage() {
     setEditingAsset(null);
     // Refresh assets list without showing loading spinner
     refetch(false);
+    void fetchStatusCounts();
   };
 
   return (
@@ -206,7 +230,7 @@ export default function AssetsPage() {
             </div>
           ))}
         </div>
-      ) : paginatedAssets.length === 0 ? (
+      ) : assets.length === 0 ? (
         <div className="bg-white dark:bg-warm-900 rounded-2xl shadow-sm border border-warm-200 dark:border-warm-800">
           <div className="p-8 text-center">
             <div className="text-4xl mb-4">🏠</div>
@@ -223,7 +247,7 @@ export default function AssetsPage() {
           {/* Card View */}
           {viewMode === 'card' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedAssets.map((asset) => (
+              {assets.map((asset) => (
                 <div
                   key={asset.id}
                   onClick={() => router.push(`/assets/${asset.id}`)}
@@ -352,7 +376,7 @@ export default function AssetsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-warm-200 dark:divide-warm-800">
-                    {paginatedAssets.map((asset) => (
+                    {assets.map((asset) => (
                       <tr
                         key={asset.id}
                         onClick={() => router.push(`/assets/${asset.id}`)}
@@ -439,10 +463,10 @@ export default function AssetsPage() {
       )}
 
       {/* Pagination */}
-      {!loading && paginatedAssets.length > 0 && totalPages > 1 && (
+      {!loading && assets.length > 0 && totalPages > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">
           <button
-            onClick={() => setCurrentPage((p: number) => Math.max(1, p - 1))}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
             className="px-4 py-2 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -465,7 +489,7 @@ export default function AssetsPage() {
           </div>
 
           <button
-            onClick={() => setCurrentPage((p: number) => Math.min(totalPages, p + 1))}
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
             className="px-4 py-2 rounded-xl bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
