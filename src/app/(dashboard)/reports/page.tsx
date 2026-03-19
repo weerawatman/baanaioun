@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Asset, Income, Expense, ExpenseCategory } from '@/types/database';
 import AddIncomeModal from '@/features/income/components/AddIncomeModal';
 
+
 interface AssetFinancialSummary {
   asset: Asset;
   totalIncome: number;
@@ -57,15 +58,34 @@ export default function ReportsPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState<number[]>([new Date().getFullYear()]);
   const [isIncomeModalOpen, setIsIncomeModalOpen] = useState(false);
 
-  const fetchData = async () => {
+  const fetchAvailableYears = async () => {
+    const [incomeDates, expenseDates] = await Promise.all([
+      supabase.from('incomes').select('date').order('date', { ascending: true }),
+      supabase.from('expenses').select('date').order('date', { ascending: true }),
+    ]);
+
+    const years = new Set<number>([new Date().getFullYear()]);
+    incomeDates.data?.forEach(r => years.add(new Date(r.date).getFullYear()));
+    expenseDates.data?.forEach(r => years.add(new Date(r.date).getFullYear()));
+    setAvailableYears(Array.from(years).sort((a, b) => b - a));
+  };
+
+  const fetchData = async (year: number) => {
     setLoading(true);
+    const yearStart = `${year}-01-01`;
+    const yearEnd = `${year}-12-31`;
 
     const [assetsRes, incomesRes, expensesRes] = await Promise.all([
       supabase.from('assets').select('*').order('name'),
-      supabase.from('incomes').select('*'),
-      supabase.from('expenses').select('*'),
+      supabase.from('incomes').select('*')
+        .gte('date', yearStart)
+        .lte('date', yearEnd),
+      supabase.from('expenses').select('*')
+        .gte('date', yearStart)
+        .lte('date', yearEnd),
     ]);
 
     if (assetsRes.data) setAssets(assetsRes.data);
@@ -76,8 +96,12 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchAvailableYears();
   }, []);
+
+  useEffect(() => {
+    fetchData(selectedYear);
+  }, [selectedYear]);
 
   const assetSummaries = useMemo((): AssetFinancialSummary[] => {
     return assets.map(asset => {
@@ -150,16 +174,6 @@ export default function ReportsPage() {
 
     return months;
   }, [incomes, expenses, selectedYear]);
-
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-    years.add(new Date().getFullYear());
-
-    incomes.forEach(i => years.add(new Date(i.date).getFullYear()));
-    expenses.forEach(e => years.add(new Date(e.date).getFullYear()));
-
-    return Array.from(years).sort((a, b) => b - a);
-  }, [incomes, expenses]);
 
   const chartMax = useMemo(() => {
     const maxIncome = Math.max(...monthlyData.map(d => d.income), 1);
@@ -572,7 +586,7 @@ export default function ReportsPage() {
       <AddIncomeModal
         isOpen={isIncomeModalOpen}
         onClose={() => setIsIncomeModalOpen(false)}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(selectedYear)}
         assets={assets}
       />
     </div>
