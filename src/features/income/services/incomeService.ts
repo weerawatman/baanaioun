@@ -25,7 +25,7 @@ export class IncomeService {
             logger.info('Fetching income', { filters });
 
             let query = supabase
-                .from('income')
+                .from('incomes')
                 .select('*')
                 .order('date', { ascending: false });
 
@@ -82,7 +82,7 @@ export class IncomeService {
             logger.info('Fetching income by ID', { id });
 
             const { data, error } = await supabase
-                .from('income')
+                .from('incomes')
                 .select('*')
                 .eq('id', id)
                 .single();
@@ -123,7 +123,7 @@ export class IncomeService {
             logger.info('Creating income', { input });
 
             const { data, error } = await supabase
-                .from('income')
+                .from('incomes')
                 .insert(input)
                 .select()
                 .single();
@@ -154,7 +154,7 @@ export class IncomeService {
             logger.info('Updating income', { id, input });
 
             const { data, error } = await supabase
-                .from('income')
+                .from('incomes')
                 .update(input)
                 .eq('id', id)
                 .select()
@@ -196,7 +196,7 @@ export class IncomeService {
             logger.info('Deleting income', { id });
 
             const { error } = await supabase
-                .from('income')
+                .from('incomes')
                 .delete()
                 .eq('id', id);
 
