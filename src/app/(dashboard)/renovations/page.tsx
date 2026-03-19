@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType, AssetStatus } from '@/types/database';
 import AddRenovationProjectModal from '@/features/renovations/components/AddRenovationProjectModal';
 import AddExpenseModal from '@/features/expenses/components/AddExpenseModal';
+import { expenseService } from '@/features/expenses/services/expenseService';
 import {
   formatCurrency,
   formatDateShort as formatDate,
@@ -371,9 +372,28 @@ export default function RenovationsPage() {
 
     if (error) {
       console.error('Error fetching projects:', error);
-    } else {
-      setProjects(data || []);
+      setLoading(false);
+      return;
     }
+
+    const loadedProjects = data || [];
+    setProjects(loadedProjects);
+
+    // Batch load ALL expenses for all projects in one query
+    if (loadedProjects.length > 0) {
+      const projectIds = loadedProjects.map(p => p.id);
+      const allExpenses = await expenseService.getExpensesForProjects(projectIds);
+
+      const expensesMap: Record<string, Expense[]> = {};
+      projectIds.forEach(id => { expensesMap[id] = []; });
+      allExpenses.forEach(exp => {
+        if (exp.renovation_project_id) {
+          expensesMap[exp.renovation_project_id].push(exp);
+        }
+      });
+      setExpenses(expensesMap);
+    }
+
     setLoading(false);
   };
 
@@ -396,15 +416,8 @@ export default function RenovationsPage() {
     fetchProjects();
   }, []);
 
-  const toggleProject = async (projectId: string) => {
-    if (expandedProject === projectId) {
-      setExpandedProject(null);
-    } else {
-      setExpandedProject(projectId);
-      if (!expenses[projectId]) {
-        await fetchExpenses(projectId);
-      }
-    }
+  const toggleProject = (projectId: string) => {
+    setExpandedProject(prev => prev === projectId ? null : projectId);
   };
 
   const handleAddExpense = (projectId: string, assetId: string) => {

@@ -223,6 +223,24 @@ export class ExpenseService {
     }
 
     /**
+     * Batch fetch expenses for multiple renovation projects in a single query
+     */
+    async getExpensesForProjects(projectIds: string[]): Promise<Expense[]> {
+        if (projectIds.length === 0) return [];
+
+        const { data, error } = await supabase
+            .from('expenses')
+            .select('*')
+            .in('renovation_project_id', projectIds)
+            .order('date', { ascending: false });
+
+        if (error) {
+            throw new AppError('Failed to fetch expenses for projects', ErrorCodes.DATABASE_ERROR, 500, { originalError: error });
+        }
+        return data || [];
+    }
+
+    /**
      * Get total expenses by category
      */
     async getTotalByCategory(filters?: Omit<ExpenseFilters, 'category'>): Promise<Record<ExpenseCategory, number>> {
