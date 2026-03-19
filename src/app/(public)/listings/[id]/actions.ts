@@ -1,5 +1,7 @@
 'use server';
 
+export const runtime = 'edge';
+
 import { createClient } from '@supabase/supabase-js';
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';

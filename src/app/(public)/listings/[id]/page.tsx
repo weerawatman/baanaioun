@@ -1,5 +1,7 @@
 'use client';
 
+export const runtime = 'edge';
+
 import { useEffect, useState, use, useActionState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PublicAsset, ImageCategory } from '@/types/database';
