@@ -23,36 +23,36 @@ export default function ListingsPage() {
     async function fetchListings() {
       setLoading(true);
 
-      // Fetch available assets from the public view
-      const { data: assets, error: assetsError } = await supabase
-        .from('public_assets')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Run both queries in parallel — public_asset_images is already scoped to public assets
+      const [assetsResult, imagesResult] = await Promise.all([
+        supabase
+          .from('public_assets')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('public_asset_images')
+          .select('asset_id, url')
+          .eq('is_primary', true),
+      ]);
 
-      if (assetsError) {
-        console.error('Error fetching listings:', assetsError);
+      if (assetsResult.error || !assetsResult.data) {
+        console.error('Error fetching listings:', assetsResult.error);
         setLoading(false);
         return;
       }
 
-      if (!assets || assets.length === 0) {
+      const assets = assetsResult.data;
+
+      if (assets.length === 0) {
         setListings([]);
         setLoading(false);
         return;
       }
 
-      // Fetch primary images for these assets
-      const assetIds = assets.map((a) => a.id);
-      const { data: images } = await supabase
-        .from('public_asset_images')
-        .select('asset_id, url')
-        .in('asset_id', assetIds)
-        .eq('is_primary', true);
-
       // Build a map of asset_id -> primary image url
       const imageMap = new Map<string, string>();
-      if (images) {
-        for (const img of images) {
+      if (imagesResult.data) {
+        for (const img of imagesResult.data) {
           imageMap.set(img.asset_id, img.url);
         }
       }

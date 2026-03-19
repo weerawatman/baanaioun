@@ -412,8 +412,7 @@ export default function RenovationsPage() {
   };
 
   useEffect(() => {
-    fetchAssets();
-    fetchProjects();
+    void Promise.all([fetchAssets(), fetchProjects()]);
   }, []);
 
   const toggleProject = (projectId: string) => {
@@ -525,8 +524,7 @@ export default function RenovationsPage() {
     }
 
     setCompletionModal(null);
-    fetchProjects();
-    fetchAssets();
+    void Promise.all([fetchProjects(), fetchAssets()]);
   };
 
   const filteredProjects = filterType === 'all'
