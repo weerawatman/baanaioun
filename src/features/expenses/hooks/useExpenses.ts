@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Expense } from '@/types/database';
 import { expenseService, ExpenseFilters } from '../services/expenseService';
 import { handleError, logger } from '@/shared/utils';
@@ -20,7 +20,7 @@ export function useExpenses(filters?: ExpenseFilters): UseExpensesReturn {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchExpenses = async (showLoading = true) => {
+    const fetchExpenses = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
         setError(null);
 
@@ -34,11 +34,18 @@ export function useExpenses(filters?: ExpenseFilters): UseExpensesReturn {
         } finally {
             if (showLoading) setLoading(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        filters?.category,
+        filters?.assetId,
+        filters?.renovationProjectId,
+        filters?.startDate,
+        filters?.endDate,
+    ]);
 
     useEffect(() => {
         fetchExpenses();
-    }, [JSON.stringify(filters)]);
+    }, [fetchExpenses]);
 
     return {
         expenses,

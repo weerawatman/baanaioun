@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Income } from '@/types/database';
 import { incomeService, IncomeFilters } from '../services/incomeService';
 import { handleError, logger } from '@/shared/utils';
@@ -20,7 +20,7 @@ export function useIncome(filters?: IncomeFilters): UseIncomeReturn {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchIncome = async (showLoading = true) => {
+    const fetchIncome = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
         setError(null);
 
@@ -34,11 +34,17 @@ export function useIncome(filters?: IncomeFilters): UseIncomeReturn {
         } finally {
             if (showLoading) setLoading(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        filters?.assetId,
+        filters?.source,
+        filters?.startDate,
+        filters?.endDate,
+    ]);
 
     useEffect(() => {
         fetchIncome();
-    }, [JSON.stringify(filters)]);
+    }, [fetchIncome]);
 
     return {
         income,

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RenovationProject } from '@/types/database';
 import { renovationService, RenovationFilters } from '../services/renovationService';
 import { handleError, logger } from '@/shared/utils';
@@ -20,7 +20,7 @@ export function useRenovations(filters?: RenovationFilters): UseRenovationsRetur
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
-    const fetchRenovations = async (showLoading = true) => {
+    const fetchRenovations = useCallback(async (showLoading = true) => {
         if (showLoading) setLoading(true);
         setError(null);
 
@@ -34,11 +34,16 @@ export function useRenovations(filters?: RenovationFilters): UseRenovationsRetur
         } finally {
             if (showLoading) setLoading(false);
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        filters?.status,
+        filters?.assetId,
+        filters?.projectType,
+    ]);
 
     useEffect(() => {
         fetchRenovations();
-    }, [JSON.stringify(filters)]);
+    }, [fetchRenovations]);
 
     return {
         renovations,

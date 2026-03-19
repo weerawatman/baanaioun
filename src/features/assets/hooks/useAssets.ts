@@ -38,7 +38,12 @@ export function useAssets(filters?: AssetFilters): UseAssetsReturn {
                 setLoading(false);
             }
         }
-    }, [filters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        filters?.status,
+        filters?.propertyType,
+        filters?.search,
+    ]);
 
     useEffect(() => {
         fetchAssets();
