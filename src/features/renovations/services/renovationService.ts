@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { RenovationProject, RenovationStatus, ProjectType } from '@/types/database';
-import { AppError, ErrorCodes, logger } from '@/shared/utils';
+import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 
 export interface RenovationFilters {
     status?: RenovationStatus;
@@ -41,15 +41,7 @@ export class RenovationService {
                 query = query.eq('project_type', filters.projectType);
             }
 
-            // Create a promise that rejects in 10 seconds
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new AppError('Request timed out', ErrorCodes.NETWORK_ERROR, 408)), 10000);
-            });
-
-            const { data, error } = await Promise.race([
-                query,
-                timeoutPromise
-            ]) as any;
+            const { data, error } = await withTimeout(query);
 
             if (error) {
                 logger.error('Error fetching renovations', error);

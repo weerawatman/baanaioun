@@ -1,0 +1,29 @@
+import { useState, useCallback } from 'react';
+
+interface UseModalReturn {
+    isOpen: boolean;
+    open: () => void;
+    close: () => void;
+    toggle: () => void;
+}
+
+/**
+ * Manages open/close state for modals and dialogs.
+ *
+ * Replaces the repeated `const [isXxxOpen, setIsXxxOpen] = useState(false)`
+ * pattern found in every page component.
+ *
+ * @example
+ * const addModal = useModal();
+ * <Button onClick={addModal.open}>เพิ่ม</Button>
+ * <Modal isOpen={addModal.isOpen} onClose={addModal.close}>...</Modal>
+ */
+export function useModal(initialState = false): UseModalReturn {
+    const [isOpen, setIsOpen] = useState(initialState);
+
+    const open = useCallback(() => setIsOpen(true), []);
+    const close = useCallback(() => setIsOpen(false), []);
+    const toggle = useCallback(() => setIsOpen(prev => !prev), []);
+
+    return { isOpen, open, close, toggle };
+}

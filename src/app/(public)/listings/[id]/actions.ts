@@ -1,9 +1,8 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { env } from '@/config/env';
+import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
 interface SubmitLeadResult {
   success: boolean;
@@ -12,7 +11,6 @@ interface SubmitLeadResult {
 }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const THAI_PHONE_REGEX = /^0\d{8,9}$/;
 
 export async function submitLead(formData: FormData): Promise<SubmitLeadResult> {
   const asset_id = formData.get('asset_id') as string | null;
@@ -21,33 +19,27 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
   const customer_line_id = (formData.get('customer_line_id') as string | null)?.trim() ?? '';
   const message = (formData.get('message') as string | null)?.trim() ?? '';
 
-  // Validation
   const errors: Record<string, string> = {};
 
   if (!asset_id || !UUID_REGEX.test(asset_id)) {
     errors.asset_id = 'รหัสทรัพย์สินไม่ถูกต้อง';
   }
 
-  if (!customer_name) {
+  if (isEmpty(customer_name)) {
     errors.customer_name = 'กรุณากรอกชื่อ';
-  } else if (customer_name.length < 2) {
-    errors.customer_name = 'ชื่อต้องมีอย่างน้อย 2 ตัวอักษร';
-  } else if (customer_name.length > 100) {
-    errors.customer_name = 'ชื่อต้องไม่เกิน 100 ตัวอักษร';
+  } else if (!isLengthInRange(customer_name, 2, 100)) {
+    errors.customer_name = 'ชื่อต้องมี 2–100 ตัวอักษร';
   }
 
-  if (customer_phone) {
-    const digitsOnly = customer_phone.replace(/[-\s]/g, '');
-    if (!THAI_PHONE_REGEX.test(digitsOnly)) {
-      errors.customer_phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง (เช่น 0812345678)';
-    }
+  if (customer_phone && !isValidPhoneNumber(customer_phone)) {
+    errors.customer_phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง (เช่น 0812345678)';
   }
 
-  if (customer_line_id && customer_line_id.length > 50) {
+  if (customer_line_id && !isLengthInRange(customer_line_id, 1, 50)) {
     errors.customer_line_id = 'LINE ID ต้องไม่เกิน 50 ตัวอักษร';
   }
 
-  if (message && message.length > 1000) {
+  if (message && !isLengthInRange(message, 1, 1000)) {
     errors.message = 'ข้อความต้องไม่เกิน 1,000 ตัวอักษร';
   }
 
@@ -60,9 +52,9 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
     return { success: false, errors };
   }
 
-  // Insert into leads table
   try {
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+    // Use anon client for public lead submission (no session required)
+    const supabase = createClient(env.supabase.url, env.supabase.anonKey);
 
     const { error } = await supabase.from('leads').insert({
       asset_id,

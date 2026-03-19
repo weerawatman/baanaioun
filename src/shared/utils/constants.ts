@@ -34,7 +34,7 @@ export const FILE_UPLOAD = {
 
 // API
 export const API = {
-    TIMEOUT_MS: 30000,
+    TIMEOUT_MS: 10000, // 10 seconds — matches service-level query timeout
     RETRY_ATTEMPTS: 3,
 } as const;
 

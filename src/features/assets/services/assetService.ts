@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Asset, AssetStatus, PropertyType } from '@/types/database';
-import { AppError, ErrorCodes, logger } from '@/shared/utils';
+import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 
 export interface AssetFilters {
     status?: AssetStatus | 'all';
@@ -57,16 +57,7 @@ export class AssetService {
                 query = query.or(`name.ilike.%${filters.search}%,title_deed_number.ilike.%${filters.search}%`);
             }
 
-            // Create a promise that rejects in 10 seconds
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new AppError('Request timed out', ErrorCodes.NETWORK_ERROR, 408)), 10000);
-            });
-
-            // Race the query against the timeout
-            const { data, error } = await Promise.race([
-                query,
-                timeoutPromise
-            ]) as any;
+            const { data, error } = await withTimeout(query);
 
             if (error) {
                 logger.error('Error fetching assets', error);

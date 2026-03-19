@@ -4,3 +4,4 @@ export * from './logger';
 export * from './format';
 export * from './validation';
 export * from './constants';
+export * from './withTimeout';
