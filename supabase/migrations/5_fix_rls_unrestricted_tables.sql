@@ -9,6 +9,9 @@
 -- or explicit GRANT), silently blocking all asset creation
 -- from the frontend.
 --
+-- ⚠️  DEPRECATED: Use migration 6_comprehensive_rls_fix.sql instead
+-- This migration is incomplete. Migration 6 fixes ALL tables.
+--
 -- Run this in: Supabase Dashboard → SQL Editor
 -- ============================================================
 
