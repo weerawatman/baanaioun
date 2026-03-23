@@ -1,204 +1,241 @@
 # Baanaioun — ระบบจัดการอสังหาริมทรัพย์
 
-ระบบบริหารจัดการอสังหาริมทรัพย์สำหรับนักลงทุนส่วนตัว ครอบคลุมตั้งแต่การบันทึกทรัพย์สิน, การจัดการโครงการปรับปรุง, ติดตามรายได้-รายจ่าย ไปจนถึงหน้าแสดงประกาศอสังหาสาธารณะ
+ระบบบริหารจัดการอสังหาริมทรัพย์สำหรับนักลงทุนส่วนตัว พัฒนาด้วย Next.js 16 + Supabase
+
+**Production:** [baanaioun.com](https://www.baanaioun.com)
 
 ---
 
 ## ฟีเจอร์
 
-| ฟีเจอร์ | รายละเอียด |
-|---|---|
-| **Asset Management** | บันทึก/แก้ไขทรัพย์สิน, ติดตาม status lifecycle (พัฒนา → ขาย/ให้เช่า → ขายแล้ว) |
-| **Renovation Projects** | จัดการโครงการปรับปรุงหรือก่อสร้างใหม่ พร้อม budget tracking |
-| **Expense Tracking** | บันทึกรายจ่ายแยก category (วัสดุ, แรงงาน, สาธารณูปโภค ฯลฯ) |
-| **Income Tracking** | บันทึกรายได้ต่อทรัพย์สิน (ค่าเช่า, กำไรจากการขาย ฯลฯ) |
-| **Image Gallery** | อัปโหลดรูปภาพแยก timeline (ก่อน/ระหว่าง/หลังปรับปรุง) |
-| **Financial Reports** | รายงานรายได้และรายจ่ายรายปี |
-| **Public Listings** | หน้าแสดงทรัพย์สินพร้อมขาย/เช่าสำหรับบุคคลทั่วไป + ฟอร์มส่ง Lead |
-| **Authentication** | ระบบ Login/Signup ผ่าน Supabase Auth |
+| | ฟีเจอร์ | รายละเอียด |
+|--|---------|-----------|
+| 🏠 | **จัดการทรัพย์สิน** | บันทึก/แก้ไขทรัพย์สิน ติดตาม lifecycle ตั้งแต่ซื้อจนขายออก |
+| 🔨 | **โครงการก่อสร้าง/ปรับปรุง** | budget tracking, timeline รูปภาพ, complete project workflow |
+| 💸 | **รายจ่าย** | แยก category (วัสดุ, แรงงาน, ค่าก่อสร้าง ฯลฯ) ผูกกับโครงการได้ |
+| 💰 | **รายได้** | บันทึกรายได้ต่อทรัพย์สิน (ค่าเช่า, กำไรขาย ฯลฯ) |
+| 🖼️ | **แกลเลอรี่รูปภาพ** | อัปโหลดรูปแยก timeline (ก่อน/ระหว่าง/หลังปรับปรุง) |
+| 📊 | **รายงาน** | รายได้-รายจ่ายรายปีต่อทรัพย์สิน |
+| 🌐 | **ประกาศขาย/เช่า** | หน้าสาธารณะสำหรับลูกค้า + ฟอร์มแจ้งความสนใจ |
+| 👥 | **ลูกค้าที่สนใจ** | รายการ leads ที่ส่งมาจากหน้าประกาศ |
 
 ---
 
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router) + React 19 + TypeScript 5
-- **Database & Auth**: Supabase (PostgreSQL + Auth + Storage)
-- **Styling**: Tailwind CSS 4
-- **Maps**: Leaflet + React-Leaflet
-- **Testing**: Vitest + @vitest/coverage-v8
-- **Package Manager**: npm
+- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
+- **Database & Auth:** Supabase (PostgreSQL + Row Level Security)
+- **Storage:** Supabase Storage (รูปภาพทรัพย์สิน)
+- **Styling:** Tailwind CSS 4
+- **Maps:** Leaflet + React-Leaflet (OpenStreetMap)
+- **Email:** Resend (แจ้งเตือน leads)
+- **Hosting:** Cloudflare Pages (Edge Runtime)
+- **Testing:** Vitest
 
 ---
 
-## สิ่งที่ต้องมีก่อนติดตั้ง
+## เริ่มต้นใช้งาน
 
-- Node.js 18+
-- npm 9+
-- Supabase account (สร้างได้ฟรีที่ [supabase.com](https://supabase.com))
+### สิ่งที่ต้องมี
+
+- Node.js 20+
+- npm
+- Supabase account (ฟรีที่ [supabase.com](https://supabase.com))
+- Resend account (ฟรีที่ [resend.com](https://resend.com)) — สำหรับ email notifications
 
 ---
 
-## ติดตั้งและรัน
-
-### 1. Clone & Install
+### ขั้นตอนที่ 1 — Clone และ Install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/weerawatman/baanaioun.git
 cd baanaioun
 npm install
 ```
 
-### 2. สร้าง Supabase Project
+---
 
-1. สร้าง project ที่ [supabase.com](https://supabase.com)
-2. ไปที่ **Project Settings → API** เพื่อดู:
-   - **Project URL** (SUPABASE_URL)
-   - **anon / public key** (SUPABASE_ANON_KEY)
+### ขั้นตอนที่ 2 — สร้าง Supabase Project
 
-### 3. ตั้งค่า Environment Variables
+1. ไปที่ [supabase.com](https://supabase.com) → สร้าง project ใหม่
+2. เปิด **Project Settings → API** และ copy:
+   - **Project URL**
+   - **anon / public key**
+
+---
+
+### ขั้นตอนที่ 3 — ตั้งค่า Environment Variables
 
 ```bash
 cp .env.example .env.local
 ```
 
 แก้ไข `.env.local`:
+
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+RESEND_API_KEY=re_xxxxxxxxxxxx
+NOTIFICATION_EMAIL=your@email.com
+NOTIFICATION_FROM_EMAIL=notify@yourdomain.com
 ```
 
-### 4. รัน Database Migrations
+---
 
-ใน **Supabase Dashboard → SQL Editor** รันไฟล์ migration ตามลำดับ:
+### ขั้นตอนที่ 4 — สร้าง Database
+
+เปิด **Supabase Dashboard → SQL Editor** แล้วรันไฟล์ตามลำดับ:
 
 ```
-supabase/migrations/001_initial_full_schema.sql
-supabase/migrations/002_migrate_assets_column_names.sql
-supabase/migrations/003_fix_schema_add_missing_columns.sql
-supabase/migrations/004_add_project_type_to_renovations.sql
-supabase/migrations/005_extend_expense_categories_construction.sql
-supabase/migrations/006_add_complete_project_function.sql
-supabase/migrations/007_extend_image_categories_and_project_link.sql
-supabase/migrations/008_add_asset_sale_rent_fields_and_leads.sql
-supabase/migrations/009_add_public_listing_view_and_rls.sql
-supabase/migrations/010_add_location_field_update_views.sql
-supabase/migrations/011_add_anon_select_policies.sql
-supabase/migrations/012_update_asset_status_values.sql
-supabase/migrations/013_add_auth_user_profiles.sql
-supabase/migrations/014_add_tenant_fields_to_assets.sql
+supabase/migrations/1_core_schema.sql       ← ตาราง + RLS enable
+supabase/migrations/2_rls_and_auth.sql      ← user profiles + policies
+supabase/migrations/3_public_listings.sql   ← views + anon access
+supabase/migrations/4_indexes.sql           ← indexes
 ```
 
-### 5. สร้าง Storage Bucket
+---
 
-ใน **Supabase Dashboard → SQL Editor**:
+### ขั้นตอนที่ 5 — สร้าง Storage Bucket
 
-```sql
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('asset-images', 'asset-images', true);
+ใน **Supabase Dashboard → Storage:**
 
-CREATE POLICY "Anyone can view asset images" ON storage.objects
-  FOR SELECT USING (bucket_id = 'asset-images');
+1. คลิก **New bucket** → ชื่อ `asset-files` → เปิด Public
+2. เพิ่ม Storage Policies (ไปที่ Policies tab ของ bucket):
 
-CREATE POLICY "Authenticated users can upload" ON storage.objects
-  FOR INSERT WITH CHECK (bucket_id = 'asset-images' AND auth.uid() IS NOT NULL);
+| Policy | Role | Operation |
+|--------|------|-----------|
+| Public read asset files | anon | SELECT |
+| Authenticated upload asset files | authenticated | INSERT |
+| Authenticated delete asset files | authenticated | DELETE |
 
-CREATE POLICY "Authenticated users can delete own images" ON storage.objects
-  FOR DELETE USING (bucket_id = 'asset-images' AND auth.uid() IS NOT NULL);
-```
+หรือรัน SQL จาก comment ใน `supabase/migrations/3_public_listings.sql`
 
-### 6. (แนะนำ) เพิ่ม Performance Indexes
+---
 
-```sql
-CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
-CREATE INDEX IF NOT EXISTS idx_assets_property_type ON assets(property_type);
-CREATE INDEX IF NOT EXISTS idx_renovation_projects_asset_id ON renovation_projects(asset_id);
-CREATE INDEX IF NOT EXISTS idx_renovation_projects_status ON renovation_projects(status);
-CREATE INDEX IF NOT EXISTS idx_expenses_asset_id ON expenses(asset_id);
-CREATE INDEX IF NOT EXISTS idx_expenses_renovation_project_id ON expenses(renovation_project_id);
-CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
-CREATE INDEX IF NOT EXISTS idx_incomes_asset_id ON incomes(asset_id);
-CREATE INDEX IF NOT EXISTS idx_incomes_date ON incomes(date);
-CREATE INDEX IF NOT EXISTS idx_asset_images_asset_id ON asset_images(asset_id);
-CREATE INDEX IF NOT EXISTS idx_leads_asset_id ON leads(asset_id);
-```
-
-### 7. รัน Development Server
+### ขั้นตอนที่ 6 — รัน Development Server
 
 ```bash
 npm run dev
 ```
 
-เปิดเบราว์เซอร์ที่ [http://localhost:3000](http://localhost:3000)
+เปิด [http://localhost:3000](http://localhost:3000)
+
+> สมัครบัญชีแรกผ่านหน้า `/signup` — บัญชีแรกจะได้ role `user` โดยอัตโนมัติ
+> เปลี่ยน role เป็น `admin` ได้ใน Supabase → Table Editor → user_profiles
+
+---
+
+### (Optional) ใส่ข้อมูลตัวอย่าง
+
+```sql
+-- รันใน Supabase SQL Editor
+-- supabase/seeds/seed_demo_data.sql
+```
+
+⚠️ ลบข้อมูลเดิมที่มี prefix `TEST-` ก่อนใส่ใหม่ — ไม่ควรรันบน production
 
 ---
 
 ## คำสั่งที่ใช้บ่อย
 
-| คำสั่ง | ผลลัพธ์ |
-|---|---|
-| `npm run dev` | รัน development server |
-| `npm run build` | Build สำหรับ production |
-| `npm run lint` | ตรวจสอบ code ด้วย ESLint |
-| `npm run format` | จัดรูปแบบ code ด้วย Prettier |
-| `npm test` | รัน unit tests ครั้งเดียว |
-| `npm run test:watch` | รัน tests แบบ watch mode |
-| `npm run test:coverage` | รัน tests พร้อมรายงาน coverage |
+```bash
+npm run dev          # Development server
+npm run build        # Build production
+npm run lint         # ESLint
+npm run format       # Prettier
+npm test             # Unit tests (Vitest)
+npm run test:watch   # Watch mode
+npm run test:coverage # Coverage report
+```
 
 ---
 
 ## โครงสร้าง Project
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (dashboard)/        # หน้าที่ต้อง Login
-│   │   ├── page.tsx        # Dashboard home
-│   │   ├── assets/         # จัดการทรัพย์สิน
-│   │   ├── renovations/    # โครงการปรับปรุง
-│   │   └── reports/        # รายงานการเงิน
-│   └── (public)/           # หน้าสาธารณะ (ไม่ต้อง Login)
-│       └── listings/       # ประกาศอสังหาฯ
+baanaioun/
+├── src/
+│   ├── app/                    # Next.js App Router
+│   │   ├── (dashboard)/        # หน้าที่ต้อง login
+│   │   │   ├── assets/         # จัดการทรัพย์สิน
+│   │   │   ├── renovations/    # โครงการก่อสร้าง/ปรับปรุง
+│   │   │   ├── leads/          # ลูกค้าที่สนใจ
+│   │   │   └── reports/        # รายงาน
+│   │   ├── (public)/listings/  # ประกาศสาธารณะ (ไม่ต้อง login)
+│   │   └── api/submit-lead/    # Edge API: รับฟอร์มสนใจ + ส่ง email
+│   │
+│   ├── features/               # Business logic แยกตาม feature
+│   │   ├── assets/             # services/ hooks/ components/
+│   │   ├── renovations/        # services/ hooks/ components/
+│   │   ├── expenses/           # services/ hooks/ components/
+│   │   ├── income/             # services/ hooks/ components/
+│   │   └── leads/              # services/ hooks/
+│   │
+│   ├── shared/
+│   │   ├── components/ui/      # Button, Card, Modal, Spinner ...
+│   │   ├── hooks/              # useAuth, useDebounce, useLocalStorage ...
+│   │   └── utils/              # constants, format, validation, errorHandler ...
+│   │
+│   ├── types/database.ts       # TypeScript interfaces ตรงกับ Supabase schema
+│   ├── lib/                    # Supabase client setup
+│   └── config/env.ts           # Environment variables (type-safe)
 │
-├── features/               # Feature-based modules
-│   ├── assets/             # services/ + hooks/ + components/
-│   ├── renovations/        # services/ + hooks/ + components/
-│   ├── expenses/           # services/ + hooks/ + components/
-│   ├── income/             # services/ + hooks/ + components/
-│   └── leads/              # services/ + hooks/
+├── supabase/
+│   ├── migrations/             # รัน 1→2→3→4 เพื่อสร้าง database ใหม่
+│   ├── seeds/                  # ข้อมูลตัวอย่างสำหรับ development
+│   ├── scripts/                # Utility scripts (verify security ฯลฯ)
+│   └── archive/                # Migration history (applied to production)
 │
-├── shared/
-│   ├── components/ui/      # Button, Card, Modal, Input, ...
-│   ├── hooks/              # useAuth, useModal, useDebounce, ...
-│   └── utils/              # constants, format, validation, ...
-│
-├── types/                  # TypeScript type definitions
-├── config/env.ts           # Centralized environment variables
-└── lib/                    # Supabase client setup
+└── docs/
+    ├── DEVELOPMENT_GUIDE.md    # Coding standards และ architecture
+    └── PERFORMANCE_ROADMAP.md  # Performance decisions history
 ```
-
-ดูรายละเอียดสถาปัตยกรรมและ pattern การเขียน code ได้ที่ [docs/DEVELOPMENT_GUIDE.md](./docs/DEVELOPMENT_GUIDE.md)
 
 ---
 
-## การ Deploy
+## Database Schema
 
-### Deploy บน Cloudflare Pages (production)
+```
+assets ──────────────────────────────────────────────────────┐
+  │                                                           │
+  ├── renovation_projects (CASCADE DELETE)                    │
+  │     └── asset_images (project link, SET NULL on delete)  │
+  │     └── expenses (project link, CASCADE DELETE)          │
+  │                                                           │
+  ├── expenses (CASCADE DELETE)                               │
+  ├── incomes (CASCADE DELETE)                                │
+  ├── asset_images (CASCADE DELETE)                           │
+  └── leads (CASCADE DELETE)                                  │
+                                                              │
+user_profiles ← auth.users (Supabase Auth) ─────────────────┘
+
+Views (anon access):
+  public_assets        → assets WHERE status IN (ready_for_sale, ready_for_rent)
+  public_asset_images  → asset_images JOIN public assets
+```
+
+**Asset status lifecycle:**
+```
+developing → ready_for_sale → sold
+           → ready_for_rent → rented
+```
+
+---
+
+## Deploy บน Cloudflare Pages
 
 1. Push code ไปที่ GitHub
-2. เชื่อมต่อ repository ที่ [Cloudflare Pages](https://pages.cloudflare.com)
-3. Build settings:
-   - **Build command**: `npm run build`
-   - **Output directory**: `.next`
-4. เพิ่ม Environment Variables:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `NEXT_PUBLIC_APP_URL`
-   - `RESEND_API_KEY`
-   - `NOTIFICATION_EMAIL`
-   - `NOTIFICATION_FROM_EMAIL`
-5. Deploy
+2. เชื่อมต่อ repo ที่ [Cloudflare Pages](https://pages.cloudflare.com)
+3. ตั้งค่า build:
+   - **Build command:** `npm run build`
+   - **Output directory:** `.next`
+4. เพิ่ม Environment Variables ทั้งหมดจาก `.env.example`
 
-> **Note**: ใช้ Edge Runtime — ไม่รองรับ Node.js APIs (เช่น `next/image` optimization)
+> **หมายเหตุ:** ใช้ Edge Runtime — ไม่รองรับ `next/image` optimization
+> ใช้ `<img>` แทนและเก็บรูปที่ Supabase Storage (public CDN)
 
 ---
 
