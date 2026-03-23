@@ -163,7 +163,8 @@ src/
 │   ├── assets/             # services/ + hooks/ + components/
 │   ├── renovations/        # services/ + hooks/ + components/
 │   ├── expenses/           # services/ + hooks/ + components/
-│   └── income/             # services/ + hooks/ + components/
+│   ├── income/             # services/ + hooks/ + components/
+│   └── leads/              # services/ + hooks/
 │
 ├── shared/
 │   ├── components/ui/      # Button, Card, Modal, Input, ...
@@ -175,27 +176,29 @@ src/
 └── lib/                    # Supabase client setup
 ```
 
-ดูรายละเอียดสถาปัตยกรรมและ pattern การเขียน code ได้ที่ [PROMPT.md](./PROMPT.md)
+ดูรายละเอียดสถาปัตยกรรมและ pattern การเขียน code ได้ที่ [docs/DEVELOPMENT_GUIDE.md](./docs/DEVELOPMENT_GUIDE.md)
 
 ---
 
 ## การ Deploy
 
-### Deploy บน Vercel (แนะนำ)
+### Deploy บน Cloudflare Pages (production)
 
 1. Push code ไปที่ GitHub
-2. Import project ที่ [vercel.com](https://vercel.com)
-3. เพิ่ม Environment Variables ใน Vercel dashboard:
+2. เชื่อมต่อ repository ที่ [Cloudflare Pages](https://pages.cloudflare.com)
+3. Build settings:
+   - **Build command**: `npm run build`
+   - **Output directory**: `.next`
+4. เพิ่ม Environment Variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Deploy
+   - `NEXT_PUBLIC_APP_URL`
+   - `RESEND_API_KEY`
+   - `NOTIFICATION_EMAIL`
+   - `NOTIFICATION_FROM_EMAIL`
+5. Deploy
 
-### Deploy บน Self-hosted
-
-```bash
-npm run build
-npm start
-```
+> **Note**: ใช้ Edge Runtime — ไม่รองรับ Node.js APIs (เช่น `next/image` optimization)
 
 ---
 
