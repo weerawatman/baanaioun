@@ -13,4 +13,9 @@ export const env = {
     isDev: process.env.NODE_ENV === 'development',
     isProd: process.env.NODE_ENV === 'production',
   },
+  notification: {
+    resendApiKey: process.env.RESEND_API_KEY ?? '',
+    notificationEmail: process.env.NOTIFICATION_EMAIL ?? '',
+    fromEmail: process.env.NOTIFICATION_FROM_EMAIL ?? '',
+  },
 } as const;
