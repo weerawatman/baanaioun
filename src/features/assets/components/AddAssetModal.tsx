@@ -72,7 +72,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       mortgage_amount: formData.mortgage_amount ? parseFloat(formData.mortgage_amount) : null,
       fire_insurance_expiry: formData.fire_insurance_expiry || null,
       land_tax_due_date: formData.land_tax_due_date || null,
-      location_lat_long: formData.location_lat_long || null,
+      location_lat_long: formData.location_lat_long ? formData.location_lat_long.trim() : null,
       notes: formData.notes || null,
       status: formData.status,
       tenant_name: formData.status === 'rented' ? (formData.tenant_name || null) : null,
