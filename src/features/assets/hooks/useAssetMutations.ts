@@ -2,6 +2,21 @@ import { useState, useCallback } from 'react';
 import { Asset } from '@/types/database';
 import { assetService, CreateAssetInput, UpdateAssetInput } from '../services/assetService';
 import { handleError, logger } from '@/shared/utils';
+import { ErrorCodes } from '@/shared/utils/errorHandler';
+
+/** Retry a fn once if the first attempt times out (Supabase free-tier cold start) */
+async function withRetryOnTimeout<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+        return await fn();
+    } catch (err) {
+        const isTimeout = err instanceof Error && 'code' in err && (err as { code: string }).code === ErrorCodes.TIMEOUT;
+        if (isTimeout) {
+            logger.info('Request timed out — retrying once after cold start');
+            return await fn();
+        }
+        throw err;
+    }
+}
 
 interface UseAssetMutationsReturn {
     creating: boolean;
@@ -27,7 +42,7 @@ export function useAssetMutations(): UseAssetMutationsReturn {
         setCreating(true);
         setError(null);
         try {
-            const asset = await assetService.createAsset(input);
+            const asset = await withRetryOnTimeout(() => assetService.createAsset(input));
             logger.info('Asset created via hook', { id: asset.id });
             return asset;
         } catch (err) {
@@ -44,7 +59,7 @@ export function useAssetMutations(): UseAssetMutationsReturn {
         setUpdating(true);
         setError(null);
         try {
-            const asset = await assetService.updateAsset(id, input);
+            const asset = await withRetryOnTimeout(() => assetService.updateAsset(id, input));
             logger.info('Asset updated via hook', { id });
             return asset;
         } catch (err) {

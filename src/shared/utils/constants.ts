@@ -34,7 +34,7 @@ export const FILE_UPLOAD = {
 
 // API
 export const API = {
-    TIMEOUT_MS: 30000, // 30 seconds — Cloudflare cold start can take up to ~20s
+    TIMEOUT_MS: 60000, // 60 seconds — Supabase free tier cold start can take 30-60s
     RETRY_ATTEMPTS: 3,
 } as const;
 
