@@ -14,11 +14,21 @@ export async function withTimeout<T>(
     promise: PromiseLike<T>,
     ms: number = API.TIMEOUT_MS,
 ): Promise<T> {
-    const timer = new Promise<never>((_, reject) =>
-        setTimeout(
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const timer = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
             () => reject(new AppError('Request timed out', ErrorCodes.TIMEOUT, 408)),
             ms,
-        )
-    );
-    return Promise.race([promise as Promise<T>, timer]);
+        );
+    });
+
+    try {
+        const result = await Promise.race([promise as Promise<T>, timer]);
+        clearTimeout(timeoutId!);
+        return result;
+    } catch (err) {
+        clearTimeout(timeoutId!);
+        throw err;
+    }
 }

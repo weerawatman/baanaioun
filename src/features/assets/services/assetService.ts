@@ -23,6 +23,7 @@ export type UpdateAssetInput = Partial<CreateAssetInput>;
 
 /** Map common Postgres/PostgREST error codes to actionable Thai messages */
 function formatDbError(error: { message: string; code?: string; hint?: string; details?: string }): string {
+    console.error('--- formatDbError Trace ---', { code: error.code, message: error.message, hint: error.hint, details: error.details });
     switch (error.code) {
         case '42501':  // insufficient_privilege (RLS block)
             return 'ไม่มีสิทธิ์บันทึกข้อมูล — กรุณาออกจากระบบแล้วเข้าใหม่';
@@ -200,6 +201,9 @@ export class AssetService {
      */
     async createAsset(input: CreateAssetInput): Promise<Asset> {
         try {
+            console.log('--- Database Insert Payload Trace ---');
+            console.log('Payload:', JSON.stringify(input, null, 2));
+            console.log('Table: assets');
             logger.info('Creating asset', { input });
 
             const { data, error } = await withTimeout(
@@ -207,6 +211,11 @@ export class AssetService {
             );
 
             if (error) {
+                console.error('--- Database Insert Error Trace ---');
+                console.error('Error Code:', error.code);
+                console.error('Error Message:', error.message);
+                console.error('Error Details:', error.details);
+                console.error('Error Hint:', error.hint);
                 logger.error('Error creating asset', error, { code: error.code, details: error.details, hint: error.hint });
                 throw new AppError(
                     formatDbError(error),
@@ -216,9 +225,13 @@ export class AssetService {
                 );
             }
 
+            console.log('--- Database Insert Success ---');
+            console.log('Inserted ID:', data.id);
             logger.info('Asset created successfully', { id: data.id });
             return data;
         } catch (error) {
+            console.error('--- Unexpected Error in assetService.createAsset ---');
+            console.error(error);
             logger.error('Unexpected error in createAsset', error);
             throw error;
         }

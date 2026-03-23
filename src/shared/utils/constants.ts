@@ -34,7 +34,7 @@ export const FILE_UPLOAD = {
 
 // API
 export const API = {
-    TIMEOUT_MS: 60000, // 60 seconds — Supabase free tier cold start can take 30-60s
+    TIMEOUT_MS: 120000, // 120 seconds — Supabase free tier cold start can take 30-90s, plus overhead
     RETRY_ATTEMPTS: 3,
 } as const;
 

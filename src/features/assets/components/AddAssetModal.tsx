@@ -77,6 +77,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
     };
 
+    console.log('Submitting asset form...', { mode, dataToSave });
+
     try {
       if (mode === 'edit' && asset) {
         await updateAsset(asset.id, dataToSave);
@@ -105,7 +107,13 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      console.error('Submission error in AddAssetModal:', err);
+      const errorMessage = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล';
+      setError(errorMessage);
+      // Ensure we alert the user if it's a timeout or serious error
+      if (errorMessage.includes('timeout') || errorMessage.includes('timed out')) {
+        alert('การเชื่อมต่อล่าช้า (Timeout) กรุณาลองใหม่อีกครั้ง หรือตรวจสอบสถานะการเชื่อมต่อของคุณ');
+      }
     }
   };
 

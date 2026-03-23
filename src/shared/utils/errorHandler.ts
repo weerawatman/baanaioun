@@ -52,6 +52,34 @@ export function handleError(error: unknown): AppError {
         return error;
     }
 
+    // Supabase / PostgREST error object
+    if (error && typeof error === 'object' && 'message' in error) {
+        const err = error as { message: string; code?: string; status?: number; hint?: string };
+
+        // Handle Gateway Timeouts (504) or specific PostgREST timeouts as TIMEOUT
+        const isTimeout =
+            err.status === 504 ||
+            err.status === 408 ||
+            err.message?.toLowerCase().includes('timeout') ||
+            err.message?.toLowerCase().includes('timed out');
+
+        if (isTimeout) {
+            return new AppError(
+                err.message || 'Request timed out',
+                ErrorCodes.TIMEOUT,
+                err.status || 408,
+                { originalError: error }
+            );
+        }
+
+        return new AppError(
+            err.message,
+            err.code || ErrorCodes.UNKNOWN_ERROR,
+            err.status || 500,
+            { originalError: error }
+        );
+    }
+
     // Standard Error
     if (error instanceof Error) {
         return new AppError(
