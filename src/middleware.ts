@@ -2,26 +2,23 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase-middleware';
 
 export async function middleware(request: NextRequest) {
-  const { user, supabaseResponse } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
-  // Public routes that don't require authentication
-  const isPublicRoute =
+  // Public routes — skip Supabase entirely, return immediately
+  if (
     pathname === '/login' ||
     pathname.startsWith('/listings') ||
-    pathname.startsWith('/api/');
-
-  // If not authenticated and trying to access a protected route
-  if (!user && !isPublicRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    return NextResponse.redirect(url);
+    pathname.startsWith('/api/')
+  ) {
+    return NextResponse.next();
   }
 
-  // If authenticated and trying to access login page
-  if (user && pathname === '/login') {
+  // Protected routes — check session (local cookie read, no network call unless token expired)
+  const { user, supabaseResponse } = await updateSession(request);
+
+  if (!user) {
     const url = request.nextUrl.clone();
-    url.pathname = '/';
+    url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 

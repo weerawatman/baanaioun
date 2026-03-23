@@ -29,9 +29,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
+  // getSession() reads JWT from cookie locally — no network call to Supabase.
+  // Only makes a network call when the access token is expired (to refresh it).
+  // getUser() by contrast always makes a network round-trip to verify the token.
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
-  return { user, supabaseResponse };
+  return { user: session?.user ?? null, supabaseResponse };
 }
