@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Asset, AssetStatus } from '@/types/database';
 
 interface UseAssetFiltersReturn {
@@ -69,18 +69,15 @@ export function useAssetFilters(
 
     const totalPages = Math.ceil(filteredAssets.length / itemsPerPage);
 
-    // Reset to page 1 when filters change
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [statusFilter, searchQuery]);
-
-    // Memoize setters to prevent unnecessary re-renders
+    // Memoize setters — reset page on filter/search changes
     const handleSetStatusFilter = useCallback((status: AssetStatus | 'all') => {
         setStatusFilter(status);
+        setCurrentPage(1);
     }, []);
 
     const handleSetSearchQuery = useCallback((query: string) => {
         setSearchQuery(query);
+        setCurrentPage(1);
     }, []);
 
     const handleSetCurrentPage = useCallback((page: number | ((prev: number) => number)) => {

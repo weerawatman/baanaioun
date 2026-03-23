@@ -96,10 +96,12 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAvailableYears();
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData(selectedYear);
   }, [selectedYear]);
 

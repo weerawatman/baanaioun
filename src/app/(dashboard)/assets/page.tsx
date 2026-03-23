@@ -48,10 +48,15 @@ export default function AssetsPage() {
     }
   }, []);
 
-  useEffect(() => { void fetchStatusCounts(); }, [fetchStatusCounts]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchStatusCounts();
+  }, [fetchStatusCounts]);
 
-  // Reset to page 1 when filter changes
-  useEffect(() => { setCurrentPage(1); }, [statusFilter]);
+  const handleStatusFilterChange = (status: AssetStatus | 'all') => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
 
   // UI state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,7 +137,7 @@ export default function AssetsPage() {
         {/* Filter Bar */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button
-            onClick={() => setStatusFilter('all')}
+            onClick={() => handleStatusFilterChange('all')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'all'
               ? 'bg-primary-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
@@ -141,7 +146,7 @@ export default function AssetsPage() {
             ทั้งหมด ({statusCounts.all})
           </button>
           <button
-            onClick={() => setStatusFilter('developing')}
+            onClick={() => handleStatusFilterChange('developing')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'developing'
               ? 'bg-yellow-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
@@ -150,7 +155,7 @@ export default function AssetsPage() {
             ว่างรอการพัฒนา ({statusCounts.developing})
           </button>
           <button
-            onClick={() => setStatusFilter('ready_for_sale')}
+            onClick={() => handleStatusFilterChange('ready_for_sale')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'ready_for_sale'
               ? 'bg-green-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
@@ -159,7 +164,7 @@ export default function AssetsPage() {
             พร้อมขาย ({statusCounts.ready_for_sale})
           </button>
           <button
-            onClick={() => setStatusFilter('ready_for_rent')}
+            onClick={() => handleStatusFilterChange('ready_for_rent')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'ready_for_rent'
               ? 'bg-blue-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
@@ -168,7 +173,7 @@ export default function AssetsPage() {
             พร้อมเช่า ({statusCounts.ready_for_rent})
           </button>
           <button
-            onClick={() => setStatusFilter('rented')}
+            onClick={() => handleStatusFilterChange('rented')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'rented'
               ? 'bg-red-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
@@ -177,7 +182,7 @@ export default function AssetsPage() {
             มีคนเช่าอยู่ ({statusCounts.rented})
           </button>
           <button
-            onClick={() => setStatusFilter('sold')}
+            onClick={() => handleStatusFilterChange('sold')}
             className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === 'sold'
               ? 'bg-warm-500 text-white'
               : 'bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300 hover:bg-warm-200 dark:hover:bg-warm-700'
