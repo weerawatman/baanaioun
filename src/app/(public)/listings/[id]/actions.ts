@@ -1,6 +1,5 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
@@ -61,71 +60,82 @@ interface SubmitLeadResult {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function submitLead(formData: FormData): Promise<SubmitLeadResult> {
-  const asset_id = formData.get('asset_id') as string | null;
-  const customer_name = (formData.get('customer_name') as string | null)?.trim() ?? '';
-  const customer_phone = (formData.get('customer_phone') as string | null)?.trim() ?? '';
-  const customer_line_id = (formData.get('customer_line_id') as string | null)?.trim() ?? '';
-  const message = (formData.get('message') as string | null)?.trim() ?? '';
-
-  const errors: Record<string, string> = {};
-
-  if (!asset_id || !UUID_REGEX.test(asset_id)) {
-    errors.asset_id = 'รหัสทรัพย์สินไม่ถูกต้อง';
-  }
-
-  if (isEmpty(customer_name)) {
-    errors.customer_name = 'กรุณากรอกชื่อ';
-  } else if (!isLengthInRange(customer_name, 2, 100)) {
-    errors.customer_name = 'ชื่อต้องมี 2–100 ตัวอักษร';
-  }
-
-  if (customer_phone && !isValidPhoneNumber(customer_phone)) {
-    errors.customer_phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง (เช่น 0812345678)';
-  }
-
-  if (customer_line_id && !isLengthInRange(customer_line_id, 1, 50)) {
-    errors.customer_line_id = 'LINE ID ต้องไม่เกิน 50 ตัวอักษร';
-  }
-
-  if (message && !isLengthInRange(message, 1, 1000)) {
-    errors.message = 'ข้อความต้องไม่เกิน 1,000 ตัวอักษร';
-  }
-
-  if (!customer_phone && !customer_line_id) {
-    errors.customer_phone = 'กรุณากรอกเบอร์โทรหรือ LINE ID อย่างน้อย 1 ช่องทาง';
-    errors.customer_line_id = 'กรุณากรอกเบอร์โทรหรือ LINE ID อย่างน้อย 1 ช่องทาง';
-  }
-
-  if (Object.keys(errors).length > 0) {
-    return { success: false, errors };
-  }
-
   try {
-    // createServerClient from @supabase/ssr is Edge-compatible (no localStorage dependency)
-    const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
-      cookies: { getAll: () => [], setAll: () => {} },
-    });
+    const asset_id = formData.get('asset_id') as string | null;
+    const customer_name = (formData.get('customer_name') as string | null)?.trim() ?? '';
+    const customer_phone = (formData.get('customer_phone') as string | null)?.trim() ?? '';
+    const customer_line_id = (formData.get('customer_line_id') as string | null)?.trim() ?? '';
+    const message = (formData.get('message') as string | null)?.trim() ?? '';
 
-    const [insertResult, assetResult] = await Promise.all([
-      supabase.from('leads').insert({
-        asset_id,
-        customer_name,
-        customer_phone: customer_phone || null,
-        customer_line_id: customer_line_id || null,
-        message: message || null,
+    const errors: Record<string, string> = {};
+
+    if (!asset_id || !UUID_REGEX.test(asset_id)) {
+      errors.asset_id = 'รหัสทรัพย์สินไม่ถูกต้อง';
+    }
+
+    if (isEmpty(customer_name)) {
+      errors.customer_name = 'กรุณากรอกชื่อ';
+    } else if (!isLengthInRange(customer_name, 2, 100)) {
+      errors.customer_name = 'ชื่อต้องมี 2–100 ตัวอักษร';
+    }
+
+    if (customer_phone && !isValidPhoneNumber(customer_phone)) {
+      errors.customer_phone = 'รูปแบบเบอร์โทรไม่ถูกต้อง (เช่น 0812345678)';
+    }
+
+    if (customer_line_id && !isLengthInRange(customer_line_id, 1, 50)) {
+      errors.customer_line_id = 'LINE ID ต้องไม่เกิน 50 ตัวอักษร';
+    }
+
+    if (message && !isLengthInRange(message, 1, 1000)) {
+      errors.message = 'ข้อความต้องไม่เกิน 1,000 ตัวอักษร';
+    }
+
+    if (!customer_phone && !customer_line_id) {
+      errors.customer_phone = 'กรุณากรอกเบอร์โทรหรือ LINE ID อย่างน้อย 1 ช่องทาง';
+      errors.customer_line_id = 'กรุณากรอกเบอร์โทรหรือ LINE ID อย่างน้อย 1 ช่องทาง';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return { success: false, errors };
+    }
+
+    // Use raw fetch to Supabase REST API — no SDK, guaranteed Edge-compatible
+    const [insertRes, assetRes] = await Promise.all([
+      fetch(`${env.supabase.url}/rest/v1/leads`, {
+        method: 'POST',
+        headers: {
+          'apikey': env.supabase.anonKey,
+          'Authorization': `Bearer ${env.supabase.anonKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({
+          asset_id,
+          customer_name,
+          customer_phone: customer_phone || null,
+          customer_line_id: customer_line_id || null,
+          message: message || null,
+        }),
       }),
-      supabase.from('public_assets').select('name').eq('id', asset_id!).single(),
+      fetch(`${env.supabase.url}/rest/v1/public_assets?id=eq.${asset_id}&select=name&limit=1`, {
+        headers: {
+          'apikey': env.supabase.anonKey,
+          'Authorization': `Bearer ${env.supabase.anonKey}`,
+        },
+      }),
     ]);
 
-    if (insertResult.error) {
+    if (!insertRes.ok) {
       return { success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่' };
     }
 
-    // Send email notification — await so Cloudflare doesn't kill it early.
-    // Error is swallowed inside sendEmailNotification; form always succeeds.
+    const assetData = assetRes.ok ? (await assetRes.json() as { name: string }[]) : [];
+    const assetName = assetData[0]?.name ?? 'ทรัพย์สิน';
+
     await sendEmailNotification({
       assetId: asset_id!,
-      assetName: assetResult.data?.name ?? 'ทรัพย์สิน',
+      assetName,
       customerName: customer_name,
       customerPhone: customer_phone,
       customerLineId: customer_line_id,
