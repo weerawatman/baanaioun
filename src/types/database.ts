@@ -36,6 +36,8 @@ export interface Asset {
   appraised_value?: number | null;
   mortgage_bank?: string | null;
   mortgage_amount?: number | null;
+  loan_term_years?: number | null;
+  loan_start_date?: string | null;
   fire_insurance_expiry?: string | null;
   land_tax_due_date?: string | null;
   status: AssetStatus;
