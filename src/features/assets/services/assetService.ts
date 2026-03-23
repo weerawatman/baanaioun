@@ -166,7 +166,16 @@ export class AssetService {
             logger.info('Fetching asset by ID', { id });
 
             const { data, error } = await withTimeout(
-                supabase.from('assets').select('*').eq('id', id).single()
+                supabase.from('assets').select(`
+                    id, asset_code, created_at,
+                    title_deed_number, name, address,
+                    property_type, status, notes,
+                    purchase_price, purchase_date, appraised_value,
+                    mortgage_bank, mortgage_amount,
+                    fire_insurance_expiry, land_tax_due_date,
+                    selling_price, rental_price, description,
+                    location_lat_long, tenant_name, tenant_contact
+                `).eq('id', id).single()
             );
 
             if (error) {

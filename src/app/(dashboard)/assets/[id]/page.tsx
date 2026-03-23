@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import NextImage from 'next/image';
 import { Asset, AssetImage, ImageCategory, RenovationProject } from '@/types/database';
 import ProjectTimelineGallery from '@/features/assets/components/ProjectTimelineGallery';
 import Link from 'next/link';
@@ -417,14 +418,15 @@ export default function AssetDetailPage() {
                     {filteredImages.map((image) => (
                       <div key={image.id} className="relative group">
                         <div
-                          className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 cursor-pointer"
+                          className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 cursor-pointer relative"
                           onClick={() => setLightboxImage(image.url)}
                         >
-                          <img
+                          <NextImage
                             src={image.url}
                             alt={image.caption || 'Asset image'}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            loading="lazy"
+                            fill
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 22vw"
+                            className="object-cover transition-transform group-hover:scale-105"
                           />
                         </div>
                         <span className={`absolute top-2 left-2 px-2 py-0.5 rounded text-xs font-medium ${IMAGE_CATEGORY_LABELS[image.category]?.color}`}>
@@ -472,13 +474,16 @@ export default function AssetDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <img
-            src={lightboxImage}
-            alt="Full size"
-            className="max-w-full max-h-full object-contain"
-            onClick={(e) => e.stopPropagation()}
-            loading="lazy"
-          />
+          <div className="relative max-w-full max-h-full" onClick={(e) => e.stopPropagation()}>
+            <NextImage
+              src={lightboxImage}
+              alt="Full size"
+              width={1200}
+              height={900}
+              className="object-contain max-h-[90vh] w-auto"
+              style={{ maxWidth: '90vw' }}
+            />
+          </div>
         </div>
       )}
 
