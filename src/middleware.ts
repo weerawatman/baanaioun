@@ -8,7 +8,8 @@ export async function middleware(request: NextRequest) {
   // Public routes that don't require authentication
   const isPublicRoute =
     pathname === '/login' ||
-    pathname.startsWith('/listings');
+    pathname.startsWith('/listings') ||
+    pathname.startsWith('/api/');
 
   // If not authenticated and trying to access a protected route
   if (!user && !isPublicRoute) {
