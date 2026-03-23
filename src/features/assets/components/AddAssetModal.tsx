@@ -16,7 +16,7 @@ interface AddAssetModalProps {
 }
 
 export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode = 'add' }: AddAssetModalProps) {
-  const { createAsset, updateAsset, creating, updating, error: mutationError } = useAssetMutations();
+  const { createAsset, updateAsset, creating, updating } = useAssetMutations();
   const loading = creating || updating;
   const [error, setError] = useState<string | null>(null);
 
@@ -77,14 +77,13 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
     };
 
-    let result;
-    if (mode === 'edit' && asset) {
-      result = await updateAsset(asset.id, dataToSave);
-    } else {
-      result = await createAsset(dataToSave);
-    }
+    try {
+      if (mode === 'edit' && asset) {
+        await updateAsset(asset.id, dataToSave);
+      } else {
+        await createAsset(dataToSave);
+      }
 
-    if (result) {
       setFormData({
         title_deed_number: '',
         name: '',
@@ -105,9 +104,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
 
       onSuccess();
       onClose();
-    } else {
-      // mutationError is stale state — read message from hook's current error after await
-      setError(mutationError?.message ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
 
@@ -439,6 +437,9 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
 
           {/* Footer - Sticky */}
           <div className="flex-shrink-0 px-4 py-4 md:px-6 border-t border-warm-200 dark:border-warm-800 bg-warm-50 dark:bg-warm-800/50">
+            {error && (
+              <p className="text-red-600 dark:text-red-400 text-sm mb-3">{error}</p>
+            )}
             <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
               <button
                 type="button"

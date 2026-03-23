@@ -8,8 +8,8 @@ interface UseAssetMutationsReturn {
     updating: boolean;
     deleting: boolean;
     error: Error | null;
-    createAsset: (input: CreateAssetInput) => Promise<Asset | null>;
-    updateAsset: (id: string, input: UpdateAssetInput) => Promise<Asset | null>;
+    createAsset: (input: CreateAssetInput) => Promise<Asset>;
+    updateAsset: (id: string, input: UpdateAssetInput) => Promise<Asset>;
     deleteAsset: (id: string) => Promise<boolean>;
 }
 
@@ -23,11 +23,10 @@ export function useAssetMutations(): UseAssetMutationsReturn {
     const [deleting, setDeleting] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
-    const createAsset = useCallback(async (input: CreateAssetInput): Promise<Asset | null> => {
+    const createAsset = useCallback(async (input: CreateAssetInput): Promise<Asset> => {
+        setCreating(true);
+        setError(null);
         try {
-            setCreating(true);
-            setError(null);
-
             const asset = await assetService.createAsset(input);
             logger.info('Asset created via hook', { id: asset.id });
             return asset;
@@ -35,17 +34,16 @@ export function useAssetMutations(): UseAssetMutationsReturn {
             const appError = handleError(err);
             setError(appError);
             logger.error('Error creating asset in hook', err);
-            return null;
+            throw appError;
         } finally {
             setCreating(false);
         }
     }, []);
 
-    const updateAsset = useCallback(async (id: string, input: UpdateAssetInput): Promise<Asset | null> => {
+    const updateAsset = useCallback(async (id: string, input: UpdateAssetInput): Promise<Asset> => {
+        setUpdating(true);
+        setError(null);
         try {
-            setUpdating(true);
-            setError(null);
-
             const asset = await assetService.updateAsset(id, input);
             logger.info('Asset updated via hook', { id });
             return asset;
@@ -53,7 +51,7 @@ export function useAssetMutations(): UseAssetMutationsReturn {
             const appError = handleError(err);
             setError(appError);
             logger.error('Error updating asset in hook', err);
-            return null;
+            throw appError;
         } finally {
             setUpdating(false);
         }
