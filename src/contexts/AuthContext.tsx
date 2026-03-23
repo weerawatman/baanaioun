@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let initialLoad = true;
+    let cancelled = false;
 
     const fetchProfile = async (userId: string) => {
       const { data } = await supabase
@@ -35,19 +36,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .select('*')
         .eq('id', userId)
         .single();
-      setProfile(data);
+      if (!cancelled) setProfile(data);
     };
 
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
+      if (cancelled) return;
       setUser(session?.user ?? null);
 
       if (session?.user) {
         await fetchProfile(session.user.id);
       }
 
-      setLoading(false);
-      initialLoad = false;
+      if (!cancelled) {
+        setLoading(false);
+        initialLoad = false;
+      }
     };
 
     getSession();
@@ -55,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         // Skip the initial INITIAL_SESSION event to avoid double fetch
-        if (initialLoad) return;
+        if (initialLoad || cancelled) return;
 
         setUser(session?.user ?? null);
 
@@ -67,7 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {

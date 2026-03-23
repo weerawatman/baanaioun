@@ -1,7 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -77,12 +75,22 @@ export default function AssetDetailPage() {
   }, [activeProjects]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchAsset(), fetchImages(), fetchActiveProjects()]);
-      setLoading(false);
+      try {
+        await Promise.all([fetchAsset(), fetchImages(), fetchActiveProjects()]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
+
     loadData();
+
+    return () => {
+      cancelled = true;
+    };
   }, [fetchAsset, fetchImages, fetchActiveProjects]);
 
   useEffect(() => {
