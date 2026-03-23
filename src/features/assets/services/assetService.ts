@@ -21,11 +21,40 @@ export interface AssetsResult {
 export type CreateAssetInput = Omit<Asset, 'id' | 'created_at' | 'asset_code'>;
 export type UpdateAssetInput = Partial<CreateAssetInput>;
 
+/** Map common Postgres/PostgREST error codes to actionable Thai messages */
+function formatDbError(error: { message: string; code?: string; hint?: string; details?: string }): string {
+    switch (error.code) {
+        case '42501':  // insufficient_privilege (RLS block)
+            return 'ไม่มีสิทธิ์บันทึกข้อมูล — กรุณาออกจากระบบแล้วเข้าใหม่';
+        case '23505':  // unique_violation
+            return `ข้อมูลซ้ำกัน: ${error.details || error.message}`;
+        case '23502':  // not_null_violation
+            return `ข้อมูลไม่ครบถ้วน: ${error.details || error.message}`;
+        case '23503':  // foreign_key_violation
+            return `ข้อมูลอ้างอิงไม่ถูกต้อง: ${error.details || error.message}`;
+        case 'PGRST301':  // JWT expired
+            return 'เซสชันหมดอายุ — กรุณารีเฟรชหน้าหรือเข้าสู่ระบบใหม่';
+        default:
+            return error.message || 'เกิดข้อผิดพลาดในฐานข้อมูล';
+    }
+}
+
 /**
  * Service layer for Asset data access
  * Centralizes all Supabase queries for assets
  */
 export class AssetService {
+    /** Verify there is an active session before mutating; triggers token refresh if needed */
+    private async ensureSession(): Promise<void> {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+            throw new AppError(
+                'ไม่ได้เข้าสู่ระบบ — กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล',
+                ErrorCodes.UNAUTHORIZED,
+                401
+            );
+        }
+    }
     /**
      * Fetch assets with optional filters and server-side pagination
      */
@@ -175,16 +204,18 @@ export class AssetService {
         try {
             logger.info('Creating asset', { input });
 
+            await this.ensureSession();
+
             const { data, error } = await withTimeout(
                 supabase.from('assets').insert(input).select().single()
             );
 
             if (error) {
-                logger.error('Error creating asset', error);
+                logger.error('Error creating asset', error, { code: error.code, details: error.details, hint: error.hint });
                 throw new AppError(
-                    'Failed to create asset',
-                    ErrorCodes.DATABASE_ERROR,
-                    500,
+                    formatDbError(error),
+                    error.code === '42501' ? ErrorCodes.FORBIDDEN : ErrorCodes.DATABASE_ERROR,
+                    error.code === '42501' ? 403 : 500,
                     { originalError: error }
                 );
             }
@@ -204,16 +235,18 @@ export class AssetService {
         try {
             logger.info('Updating asset', { id, input });
 
+            await this.ensureSession();
+
             const { data, error } = await withTimeout(
                 supabase.from('assets').update(input).eq('id', id).select().single()
             );
 
             if (error) {
-                logger.error('Error updating asset', error, { id });
+                logger.error('Error updating asset', error, { id, code: error.code, details: error.details });
 
                 if (error.code === 'PGRST116') {
                     throw new AppError(
-                        'Asset not found',
+                        'ไม่พบทรัพย์สินที่ต้องการแก้ไข',
                         ErrorCodes.NOT_FOUND,
                         404,
                         { id }
@@ -221,9 +254,9 @@ export class AssetService {
                 }
 
                 throw new AppError(
-                    'Failed to update asset',
-                    ErrorCodes.DATABASE_ERROR,
-                    500,
+                    formatDbError(error),
+                    error.code === '42501' ? ErrorCodes.FORBIDDEN : ErrorCodes.DATABASE_ERROR,
+                    error.code === '42501' ? 403 : 500,
                     { originalError: error }
                 );
             }
