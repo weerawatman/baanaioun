@@ -44,17 +44,6 @@ function formatDbError(error: { message: string; code?: string; hint?: string; d
  * Centralizes all Supabase queries for assets
  */
 export class AssetService {
-    /** Verify there is an active session before mutating; triggers token refresh if needed */
-    private async ensureSession(): Promise<void> {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) {
-            throw new AppError(
-                'ไม่ได้เข้าสู่ระบบ — กรุณาเข้าสู่ระบบก่อนบันทึกข้อมูล',
-                ErrorCodes.UNAUTHORIZED,
-                401
-            );
-        }
-    }
     /**
      * Fetch assets with optional filters and server-side pagination
      */
@@ -213,8 +202,6 @@ export class AssetService {
         try {
             logger.info('Creating asset', { input });
 
-            await this.ensureSession();
-
             const { data, error } = await withTimeout(
                 supabase.from('assets').insert(input).select().single()
             );
@@ -243,8 +230,6 @@ export class AssetService {
     async updateAsset(id: string, input: UpdateAssetInput): Promise<Asset> {
         try {
             logger.info('Updating asset', { id, input });
-
-            await this.ensureSession();
 
             const { data, error } = await withTimeout(
                 supabase.from('assets').update(input).eq('id', id).select().single()
