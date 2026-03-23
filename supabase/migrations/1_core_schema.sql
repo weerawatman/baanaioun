@@ -1,12 +1,22 @@
 -- ============================================================
--- BAANAIOUN — 1. Core Schema (Updated)
+-- BAANAIOUN — 1. Core Schema (Clean Start)
 -- ============================================================
 
--- ASSETS
-CREATE TABLE IF NOT EXISTS assets (
+-- 0. DROP EVERYTHING FIRST (To ensure a clean run)
+DROP VIEW IF EXISTS public_asset_images;
+DROP VIEW IF EXISTS public_assets;
+DROP TABLE IF EXISTS leads CASCADE;
+DROP TABLE IF EXISTS asset_images CASCADE;
+DROP TABLE IF EXISTS incomes CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS renovation_projects CASCADE;
+DROP TABLE IF EXISTS assets CASCADE;
+DROP TABLE IF EXISTS user_profiles CASCADE;
+
+-- 1. ASSETS
+CREATE TABLE assets (
   id                    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
-  -- Auto-generated short ID (e.g. A-550E8400)
   asset_code            TEXT         GENERATED ALWAYS AS ('A-' || UPPER(SUBSTR(id::TEXT, 1, 8))) STORED,
   title_deed_number     TEXT         NOT NULL,
   name                  TEXT         DEFAULT 'ทรัพย์สินไม่มีชื่อ',
@@ -23,12 +33,10 @@ CREATE TABLE IF NOT EXISTS assets (
   land_tax_due_date     DATE,
   status                TEXT         NOT NULL DEFAULT 'developing',
   notes                 TEXT,
-  -- Public listing fields
   selling_price         NUMERIC,
   rental_price          NUMERIC,
   description           TEXT,
   location_lat_long     TEXT,
-  -- Rental tracking
   tenant_name           TEXT,
   tenant_contact        TEXT,
   updated_at            TIMESTAMPTZ  DEFAULT NOW(),
@@ -41,8 +49,8 @@ CREATE TABLE IF NOT EXISTS assets (
   )
 );
 
--- RENOVATION_PROJECTS
-CREATE TABLE IF NOT EXISTS renovation_projects (
+-- 2. RENOVATION_PROJECTS
+CREATE TABLE renovation_projects (
   id                   UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   asset_id             UUID        NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
@@ -68,8 +76,8 @@ CREATE TABLE IF NOT EXISTS renovation_projects (
   )
 );
 
--- EXPENSES
-CREATE TABLE IF NOT EXISTS expenses (
+-- 3. EXPENSES
+CREATE TABLE expenses (
   id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   asset_id              UUID        REFERENCES assets(id) ON DELETE CASCADE,
@@ -88,8 +96,8 @@ CREATE TABLE IF NOT EXISTS expenses (
   )
 );
 
--- INCOMES
-CREATE TABLE IF NOT EXISTS incomes (
+-- 4. INCOMES
+CREATE TABLE incomes (
   id          UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   asset_id    UUID        NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
@@ -99,8 +107,8 @@ CREATE TABLE IF NOT EXISTS incomes (
   description TEXT
 );
 
--- ASSET_IMAGES
-CREATE TABLE IF NOT EXISTS asset_images (
+-- 5. ASSET_IMAGES
+CREATE TABLE asset_images (
   id                    UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   asset_id              UUID        NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
@@ -115,8 +123,8 @@ CREATE TABLE IF NOT EXISTS asset_images (
   )
 );
 
--- LEADS
-CREATE TABLE IF NOT EXISTS leads (
+-- 6. LEADS
+CREATE TABLE leads (
   id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   asset_id         UUID        NOT NULL REFERENCES assets(id) ON DELETE CASCADE,
