@@ -150,23 +150,32 @@ export async function diagnosticAssetCreation(): Promise<DiagnosticReport> {
     }
 
     // Check 5: Verify RLS is actually enabled (metadata check)
-    const { data: tableInfo, error: tableError } = await supabase.rpc(
-      'table_rls_status',
-      { table_name: 'assets' }
-    ).single().catch(() => ({ data: null, error: new Error('RPC not available') }));
+    try {
+      const { data: tableInfo, error: tableError } = await supabase.rpc(
+        'table_rls_status',
+        { table_name: 'assets' }
+      ).single();
 
-    if (!tableError && tableInfo) {
-      checks.push({
-        status: 'success',
-        check: 'RLS Status (assets)',
-        message: `RLS is ${tableInfo.rls_enabled ? 'enabled' : 'disabled'}`,
-        details: tableInfo,
-      });
-    } else {
+      if (!tableError && tableInfo) {
+        checks.push({
+          status: 'success',
+          check: 'RLS Status (assets)',
+          message: `RLS is ${tableInfo.rls_enabled ? 'enabled' : 'disabled'}`,
+          details: tableInfo,
+        });
+      } else {
+        checks.push({
+          status: 'warning',
+          check: 'RLS Status',
+          message: 'Could not verify RLS status',
+          details: tableError,
+        });
+      }
+    } catch (rpcError) {
       checks.push({
         status: 'warning',
         check: 'RLS Status',
-        message: 'Could not verify RLS status (RPC not available)',
+        message: 'Could not verify RLS status (RPC not available or not implemented)',
         details: null,
       });
     }
