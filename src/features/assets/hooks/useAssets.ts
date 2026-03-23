@@ -30,7 +30,11 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
     const { data: result, error, isLoading, mutate } = useSWR(
         key,
         () => assetService.getAssets(filters, pagination),
-        { revalidateOnFocus: false }
+        {
+            revalidateOnFocus: true,
+            focusThrottleInterval: 60000, // revalidate at most once per minute on tab focus
+            keepPreviousData: true,       // show cached data while refetching (no blank screen)
+        }
     );
 
     const refetch = useCallback(async (_showLoading?: boolean) => {

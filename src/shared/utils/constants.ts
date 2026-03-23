@@ -34,7 +34,7 @@ export const FILE_UPLOAD = {
 
 // API
 export const API = {
-    TIMEOUT_MS: 10000, // 10 seconds — matches service-level query timeout
+    TIMEOUT_MS: 30000, // 30 seconds — Cloudflare cold start can take up to ~20s
     RETRY_ATTEMPTS: 3,
 } as const;
 

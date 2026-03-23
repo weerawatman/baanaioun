@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -50,15 +50,55 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [flyTarget, setFlyTarget] = useState<L.LatLngExpression | null>(null);
+  const [coordInputError, setCoordInputError] = useState<string | null>(null);
 
   const coords = parseLatLong(value);
+
+  // Sync input field when value is set externally (e.g. modal opens with existing asset)
+  const externalCoordString = useMemo(
+    () => (coords ? `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}` : ''),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [value],
+  );
+  const [coordInput, setCoordInput] = useState(externalCoordString);
+  const prevValueRef = useRef(value);
+  useEffect(() => {
+    if (value !== prevValueRef.current) {
+      prevValueRef.current = value;
+      setCoordInput(value ? externalCoordString : '');
+      setCoordInputError(null);
+    }
+  }, [value, externalCoordString]);
   const markerPosition: L.LatLngExpression | null = coords ? [coords.lat, coords.lng] : null;
+
+  const handleCoordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    setCoordInput(raw);
+    setCoordInputError(null);
+    if (!raw.trim()) return;
+    const parsed = parseLatLong(raw);
+    if (parsed) {
+      onChange(formatLatLong(parsed.lat, parsed.lng));
+      setFlyTarget([parsed.lat, parsed.lng]);
+      setGeoError(null);
+    }
+  };
+
+  const handleCoordInputBlur = () => {
+    if (!coordInput.trim()) return;
+    const parsed = parseLatLong(coordInput);
+    if (!parsed) {
+      setCoordInputError('รูปแบบพิกัดไม่ถูกต้อง เช่น 13.756331, 100.501762');
+    }
+  };
 
   const handleMapClick = useCallback(
     (lat: number, lng: number) => {
       onChange(formatLatLong(lat, lng));
-      setFlyTarget(null); // don't fly on click, marker placed where user clicked
+      setCoordInput(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      setFlyTarget(null);
       setGeoError(null);
+      setCoordInputError(null);
     },
     [onChange],
   );
@@ -68,6 +108,7 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
       const marker = e.target as L.Marker;
       const pos = marker.getLatLng();
       onChange(formatLatLong(pos.lat, pos.lng));
+      setCoordInput(`${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}`);
     },
     [onChange],
   );
@@ -85,8 +126,10 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
       (position) => {
         const { latitude, longitude } = position.coords;
         onChange(formatLatLong(latitude, longitude));
+        setCoordInput(`${latitude.toFixed(6)}, ${longitude.toFixed(6)}`);
         setFlyTarget([latitude, longitude]);
         setLocating(false);
+        setCoordInputError(null);
       },
       (err) => {
         setLocating(false);
@@ -112,10 +155,27 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
     onChange(null);
     setFlyTarget(null);
     setGeoError(null);
+    setCoordInput('');
+    setCoordInputError(null);
   }, [onChange]);
 
   return (
     <div className="space-y-2">
+      {/* Manual coordinate input */}
+      <div>
+        <input
+          type="text"
+          value={coordInput}
+          onChange={handleCoordInputChange}
+          onBlur={handleCoordInputBlur}
+          placeholder="พิมพ์พิกัด เช่น 13.756331, 100.501762"
+          className="w-full px-4 py-2.5 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow font-mono placeholder:font-sans placeholder:text-warm-400"
+        />
+        {coordInputError && (
+          <p className="mt-1 text-xs text-red-500 dark:text-red-400">{coordInputError}</p>
+        )}
+      </div>
+
       {/* Geolocation button */}
       <button
         type="button"
@@ -185,7 +245,7 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
       )}
 
       <p className="text-xs text-warm-500 dark:text-warm-400">
-        คลิกบนแผนที่เพื่อปักหมุด หรือลากหมุดเพื่อเปลี่ยนตำแหน่ง
+        พิมพ์พิกัด, คลิกบนแผนที่, หรือลากหมุดเพื่อปักตำแหน่ง
       </p>
     </div>
   );

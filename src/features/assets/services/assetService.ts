@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Asset, AssetStatus, PropertyType } from '@/types/database';
-import { AppError, ErrorCodes, logger } from '@/shared/utils';
+import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 
 export interface AssetFilters {
     status?: AssetStatus | 'all';
@@ -74,7 +74,7 @@ export class AssetService {
                 query = query.range(from, to);
             }
 
-            const { data, error, count } = await query;
+            const { data, error, count } = await withTimeout(query);
 
             if (error) {
                 logger.error('Error fetching assets', error);
