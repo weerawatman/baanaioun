@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Asset, PropertyType, AssetStatus } from '@/types/database';
 import MapPickerDynamic from '@/shared/components/MapPickerDynamic';
 import { PROPERTY_TYPE_OPTIONS, ASSET_STATUS_OPTIONS } from '@/shared/utils';
@@ -20,23 +20,33 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
   const loading = creating || updating;
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState({
-    title_deed_number: asset?.title_deed_number || '',
-    name: asset?.name || '',
-    address: asset?.address || '',
-    property_type: (asset?.property_type || 'land') as PropertyType,
-    status: (asset?.status || 'developing') as AssetStatus,
-    purchase_price: asset?.purchase_price?.toString() || '',
-    appraised_value: asset?.appraised_value?.toString() || '',
-    mortgage_bank: asset?.mortgage_bank || '',
-    mortgage_amount: asset?.mortgage_amount?.toString() || '',
-    location_lat_long: asset?.location_lat_long || '',
-    fire_insurance_expiry: asset?.fire_insurance_expiry || '',
-    land_tax_due_date: asset?.land_tax_due_date || '',
-    notes: asset?.notes || '',
-    tenant_name: asset?.tenant_name || '',
-    tenant_contact: asset?.tenant_contact || '',
+  const buildFormData = (a?: Asset | null) => ({
+    title_deed_number: a?.title_deed_number || '',
+    name: a?.name || '',
+    address: a?.address || '',
+    property_type: (a?.property_type || 'land') as PropertyType,
+    status: (a?.status || 'developing') as AssetStatus,
+    purchase_price: a?.purchase_price?.toString() || '',
+    appraised_value: a?.appraised_value?.toString() || '',
+    mortgage_bank: a?.mortgage_bank || '',
+    mortgage_amount: a?.mortgage_amount?.toString() || '',
+    location_lat_long: a?.location_lat_long || '',
+    fire_insurance_expiry: a?.fire_insurance_expiry || '',
+    land_tax_due_date: a?.land_tax_due_date || '',
+    notes: a?.notes || '',
+    tenant_name: a?.tenant_name || '',
+    tenant_contact: a?.tenant_contact || '',
   });
+
+  const [formData, setFormData] = useState(() => buildFormData(asset));
+
+  // Re-populate form whenever the modal opens or the asset prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(buildFormData(asset));
+      setError(null);
+    }
+  }, [isOpen, asset]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
