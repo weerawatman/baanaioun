@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
@@ -101,8 +101,10 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
   }
 
   try {
-    // Use anon client for public lead submission (no session required)
-    const supabase = createClient(env.supabase.url, env.supabase.anonKey);
+    // createServerClient from @supabase/ssr is Edge-compatible (no localStorage dependency)
+    const supabase = createServerClient(env.supabase.url, env.supabase.anonKey, {
+      cookies: { getAll: () => [], setAll: () => {} },
+    });
 
     const [insertResult, assetResult] = await Promise.all([
       supabase.from('leads').insert({
