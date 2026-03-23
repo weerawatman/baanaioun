@@ -1,4 +1,4 @@
-'use server';
+export const runtime = 'edge';
 
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
@@ -51,16 +51,12 @@ async function sendEmailNotification(params: NotifyEmailParams): Promise<void> {
   }
 }
 
-interface SubmitLeadResult {
-  success: boolean;
-  errors?: Record<string, string>;
-  message?: string;
-}
-
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export async function submitLead(formData: FormData): Promise<SubmitLeadResult> {
+export async function POST(request: Request): Promise<Response> {
   try {
+    const formData = await request.formData();
+
     const asset_id = formData.get('asset_id') as string | null;
     const customer_name = (formData.get('customer_name') as string | null)?.trim() ?? '';
     const customer_phone = (formData.get('customer_phone') as string | null)?.trim() ?? '';
@@ -97,10 +93,9 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
     }
 
     if (Object.keys(errors).length > 0) {
-      return { success: false, errors };
+      return Response.json({ success: false, errors });
     }
 
-    // Use raw fetch to Supabase REST API — no SDK, guaranteed Edge-compatible
     const [insertRes, assetRes] = await Promise.all([
       fetch(`${env.supabase.url}/rest/v1/leads`, {
         method: 'POST',
@@ -127,7 +122,7 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
     ]);
 
     if (!insertRes.ok) {
-      return { success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่' };
+      return Response.json({ success: false, message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่' });
     }
 
     const assetData = assetRes.ok ? (await assetRes.json() as { name: string }[]) : [];
@@ -142,8 +137,8 @@ export async function submitLead(formData: FormData): Promise<SubmitLeadResult> 
       message,
     });
 
-    return { success: true, message: 'ส่งข้อมูลสำเร็จ เราจะติดต่อกลับโดยเร็วที่สุด' };
+    return Response.json({ success: true, message: 'ส่งข้อมูลสำเร็จ เราจะติดต่อกลับโดยเร็วที่สุด' });
   } catch {
-    return { success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' };
+    return Response.json({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
   }
 }

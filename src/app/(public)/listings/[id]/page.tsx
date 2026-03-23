@@ -2,11 +2,10 @@
 
 export const runtime = 'edge';
 
-import { useEffect, useState, use, useActionState } from 'react';
+import { useEffect, useState, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
-import { submitLead } from './actions';
 import { parseLatLong } from '@/lib/geo';
 import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
 
@@ -35,14 +34,26 @@ export default function ListingDetailPage({
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Contact form with Server Action
-  const [formState, formAction, isPending] = useActionState(
-    async (_prevState: { success: boolean; errors?: Record<string, string>; message?: string } | null, formData: FormData) => {
+  // Contact form state
+  type FormState = { success: boolean; errors?: Record<string, string>; message?: string } | null;
+  const [formState, setFormState] = useState<FormState>(null);
+  const [isPending, setIsPending] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsPending(true);
+    try {
+      const formData = new FormData(e.currentTarget);
       formData.set('asset_id', id);
-      return submitLead(formData);
-    },
-    null
-  );
+      const res = await fetch('/api/submit-lead', { method: 'POST', body: formData });
+      const data = await res.json() as FormState;
+      setFormState(data);
+    } catch {
+      setFormState({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
+    } finally {
+      setIsPending(false);
+    }
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -361,7 +372,7 @@ export default function ListingDetailPage({
                     </button>
                   </div>
                 ) : (
-                  <form action={formAction} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     {/* General error */}
                     {formState && !formState.success && formState.message && (
                       <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
