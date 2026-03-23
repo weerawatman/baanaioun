@@ -256,7 +256,12 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                 </label>
                 <MapPickerDynamic
                   value={formData.location_lat_long || null}
-                  onChange={(val) => setFormData(prev => ({ ...prev, location_lat_long: val || '' }))}
+                  onChange={(val) => {
+                    const newVal = val ? val.trim() : '';
+                    if (newVal !== (formData.location_lat_long || '')) {
+                      setFormData(prev => ({ ...prev, location_lat_long: newVal }));
+                    }
+                  }}
                 />
               </div>
             </div>
