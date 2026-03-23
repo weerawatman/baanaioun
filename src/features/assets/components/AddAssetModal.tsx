@@ -27,6 +27,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
     property_type: (a?.property_type || 'land') as PropertyType,
     status: (a?.status || 'developing') as AssetStatus,
     purchase_price: a?.purchase_price?.toString() || '',
+    purchase_date: a?.purchase_date || '',
     appraised_value: a?.appraised_value?.toString() || '',
     mortgage_bank: a?.mortgage_bank || '',
     mortgage_amount: a?.mortgage_amount?.toString() || '',
@@ -65,6 +66,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       address: formData.address || null,
       property_type: formData.property_type,
       purchase_price: parseFloat(formData.purchase_price) || 0,
+      purchase_date: formData.purchase_date || null,
       appraised_value: formData.appraised_value ? parseFloat(formData.appraised_value) : null,
       mortgage_bank: formData.mortgage_bank || null,
       mortgage_amount: formData.mortgage_amount ? parseFloat(formData.mortgage_amount) : null,
@@ -93,6 +95,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
         property_type: 'land',
         status: 'developing',
         purchase_price: '',
+        purchase_date: '',
         appraised_value: '',
         mortgage_bank: '',
         mortgage_amount: '',
@@ -264,8 +267,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                 มูลค่าและการเงิน
               </h3>
 
-              {/* ราคาซื้อ และ ราคาประเมิน */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* ราคาซื้อ วันที่ซื้อ และ ราคาประเมิน */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
                     ราคาซื้อ (บาท) <span className="text-red-500">*</span>
@@ -285,6 +288,19 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                       ฿
                     </span>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">
+                    วันที่ซื้อ
+                  </label>
+                  <input
+                    type="date"
+                    name="purchase_date"
+                    value={formData.purchase_date}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                  />
                 </div>
 
                 <div>

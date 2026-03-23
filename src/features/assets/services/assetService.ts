@@ -225,6 +225,10 @@ export class AssetService {
                 );
             }
 
+            if (!data) {
+                throw new AppError('Failed to retrieve created asset', ErrorCodes.DATABASE_ERROR, 500);
+            }
+
             console.log('--- Database Insert Success ---');
             console.log('Inserted ID:', data.id);
             logger.info('Asset created successfully', { id: data.id });

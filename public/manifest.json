@@ -1,0 +1,16 @@
+{
+  "name": "Baanaioun",
+  "short_name": "Baanaioun",
+  "description": "Property management and renovation tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/file.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
