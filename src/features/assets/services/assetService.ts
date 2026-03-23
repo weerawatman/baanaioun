@@ -206,17 +206,22 @@ export class AssetService {
             console.log('Table: assets');
             logger.info('Creating asset', { input });
 
+            // Reduce timeout to 30s for faster feedback during debugging
             const { data, error } = await withTimeout(
-                supabase.from('assets').insert(input).select().single()
+                supabase.from('assets').insert(input).select().single(),
+                30000
             );
 
             if (error) {
                 console.error('--- Database Insert Error Trace ---');
+                console.error('Full Error Object:', JSON.stringify(error, null, 2));
                 console.error('Error Code:', error.code);
                 console.error('Error Message:', error.message);
-                console.error('Error Details:', error.details);
-                console.error('Error Hint:', error.hint);
-                logger.error('Error creating asset', error, { code: error.code, details: error.details, hint: error.hint });
+                
+                // Alert user with specific database error for debugging
+                const rawMsg = `DB Error ${error.code}: ${error.message}`;
+                alert(`ไม่สามารถบันทึกได้: ${rawMsg}`);
+
                 throw new AppError(
                     formatDbError(error),
                     error.code === '42501' ? ErrorCodes.FORBIDDEN : ErrorCodes.DATABASE_ERROR,
@@ -236,6 +241,11 @@ export class AssetService {
         } catch (error) {
             console.error('--- Unexpected Error in assetService.createAsset ---');
             console.error(error);
+            
+            if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('timed out'))) {
+              alert('การบันทึกค้าง (Timeout) — อาจเกิดจาก Trigger ในฐานข้อมูลมีปัญหา หรือระบบ Lock');
+            }
+            
             logger.error('Unexpected error in createAsset', error);
             throw error;
         }
