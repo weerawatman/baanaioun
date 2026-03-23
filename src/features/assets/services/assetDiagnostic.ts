@@ -157,10 +157,11 @@ export async function diagnosticAssetCreation(): Promise<DiagnosticReport> {
       ).single();
 
       if (!tableError && tableInfo) {
+        const info = tableInfo as any;
         checks.push({
           status: 'success',
           check: 'RLS Status (assets)',
-          message: `RLS is ${tableInfo.rls_enabled ? 'enabled' : 'disabled'}`,
+          message: `RLS is ${info.rls_enabled ? 'enabled' : 'disabled'}`,
           details: tableInfo,
         });
       } else {
