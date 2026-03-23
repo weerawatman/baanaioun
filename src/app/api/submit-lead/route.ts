@@ -19,19 +19,23 @@ async function sendEmailNotification(params: NotifyEmailParams): Promise<void> {
 
     const listingUrl = `${env.app.url}/listings/${params.assetId}`;
 
-    const html = `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-        <h2 style="margin-top:0;color:#1a1a1a;">📬 มีคนสนใจทรัพย์สิน</h2>
-        <table style="width:100%;border-collapse:collapse;">
-          <tr><td style="padding:8px 0;color:#555;width:120px;">🏠 ทรัพย์สิน</td><td style="padding:8px 0;font-weight:600;">${params.assetName}</td></tr>
-          <tr><td style="padding:8px 0;color:#555;">👤 ชื่อ</td><td style="padding:8px 0;">${params.customerName}</td></tr>
-          ${params.customerPhone ? `<tr><td style="padding:8px 0;color:#555;">📞 เบอร์โทร</td><td style="padding:8px 0;">${params.customerPhone}</td></tr>` : ''}
-          ${params.customerLineId ? `<tr><td style="padding:8px 0;color:#555;">💬 LINE ID</td><td style="padding:8px 0;">${params.customerLineId}</td></tr>` : ''}
-          ${params.message ? `<tr><td style="padding:8px 0;color:#555;vertical-align:top;">📝 ข้อความ</td><td style="padding:8px 0;">${params.message}</td></tr>` : ''}
-        </table>
-        <a href="${listingUrl}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#e07b39;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">ดูประกาศ</a>
-      </div>
-    `;
+    const html = `<!DOCTYPE html>
+<html lang="th">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f5f5;">
+  <div style="font-family:sans-serif;max-width:480px;margin:24px auto;padding:24px;background:#fff;border-radius:12px;">
+    <h2 style="margin-top:0;color:#1a1a1a;">&#128236; มีคนสนใจทรัพย์สิน</h2>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr><td style="padding:8px 0;color:#555;width:120px;">&#127968; ทรัพย์สิน</td><td style="padding:8px 0;font-weight:600;">${params.assetName}</td></tr>
+      <tr><td style="padding:8px 0;color:#555;">&#128100; ชื่อ</td><td style="padding:8px 0;">${params.customerName}</td></tr>
+      ${params.customerPhone ? `<tr><td style="padding:8px 0;color:#555;">&#128222; เบอร์โทร</td><td style="padding:8px 0;">${params.customerPhone}</td></tr>` : ''}
+      ${params.customerLineId ? `<tr><td style="padding:8px 0;color:#555;">&#128172; LINE ID</td><td style="padding:8px 0;">${params.customerLineId}</td></tr>` : ''}
+      ${params.message ? `<tr><td style="padding:8px 0;color:#555;vertical-align:top;">&#128221; ข้อความ</td><td style="padding:8px 0;">${params.message}</td></tr>` : ''}
+    </table>
+    <a href="${listingUrl}" style="display:inline-block;margin-top:16px;padding:10px 20px;background:#e07b39;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">ดูประกาศ</a>
+  </div>
+</body>
+</html>`;
 
     await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -42,7 +46,7 @@ async function sendEmailNotification(params: NotifyEmailParams): Promise<void> {
       body: JSON.stringify({
         from: fromEmail,
         to: [notificationEmail],
-        subject: `📬 ${params.customerName} สนใจ: ${params.assetName}`,
+        subject: `[Baanaioun] ${params.customerName} สนใจ: ${params.assetName}`,
         html,
       }),
     });
