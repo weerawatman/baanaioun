@@ -34,6 +34,8 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
             revalidateOnFocus: true,
             focusThrottleInterval: 60000, // revalidate at most once per minute on tab focus
             keepPreviousData: true,       // show cached data while refetching (no blank screen)
+            errorRetryCount: 3,           // retry up to 3 times on error (handles Supabase cold start)
+            errorRetryInterval: 5000,     // wait 5s between retries
         }
     );
 

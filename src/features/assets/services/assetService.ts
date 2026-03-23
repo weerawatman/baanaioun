@@ -99,9 +99,9 @@ export class AssetService {
      */
     async getStatusCounts(): Promise<Record<AssetStatus | 'all', number>> {
         try {
-            const { data, error } = await supabase
-                .from('assets')
-                .select('status');
+            const { data, error } = await withTimeout(
+                supabase.from('assets').select('status')
+            );
 
             if (error) {
                 logger.error('Error fetching status counts', error);
@@ -136,11 +136,9 @@ export class AssetService {
         try {
             logger.info('Fetching asset by ID', { id });
 
-            const { data, error } = await supabase
-                .from('assets')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const { data, error } = await withTimeout(
+                supabase.from('assets').select('*').eq('id', id).single()
+            );
 
             if (error) {
                 logger.error('Error fetching asset', error, { id });
@@ -177,11 +175,9 @@ export class AssetService {
         try {
             logger.info('Creating asset', { input });
 
-            const { data, error } = await supabase
-                .from('assets')
-                .insert(input)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase.from('assets').insert(input).select().single()
+            );
 
             if (error) {
                 logger.error('Error creating asset', error);
@@ -208,12 +204,9 @@ export class AssetService {
         try {
             logger.info('Updating asset', { id, input });
 
-            const { data, error } = await supabase
-                .from('assets')
-                .update(input)
-                .eq('id', id)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase.from('assets').update(input).eq('id', id).select().single()
+            );
 
             if (error) {
                 logger.error('Error updating asset', error, { id });
@@ -250,10 +243,9 @@ export class AssetService {
         try {
             logger.info('Deleting asset', { id });
 
-            const { error } = await supabase
-                .from('assets')
-                .delete()
-                .eq('id', id);
+            const { error } = await withTimeout(
+                supabase.from('assets').delete().eq('id', id)
+            );
 
             if (error) {
                 logger.error('Error deleting asset', error, { id });

@@ -105,8 +105,9 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
 
       onSuccess();
       onClose();
-    } else if (mutationError) {
-      setError(mutationError.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+    } else {
+      // mutationError is stale state — read message from hook's current error after await
+      setError(mutationError?.message ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
     }
   };
 
