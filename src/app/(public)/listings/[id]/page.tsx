@@ -5,6 +5,9 @@ export const runtime = 'edge';
 import { useEffect, useState, use, useRef } from 'react';
 import Script from 'next/script';
 import Image from 'next/image';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { supabase } from '@/lib/supabase/client';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
@@ -23,6 +26,18 @@ interface PublicImage {
   category: ImageCategory;
   created_at: string;
 }
+
+const contactFormSchema = z.object({
+  customer_name: z.string().min(2, 'กรุณากรอกชื่อ (อย่างน้อย 2 ตัวอักษร)').max(100, 'ชื่อยาวเกินไป'),
+  customer_phone: z.string().optional().refine(val => !val || /^[0-9]{9,10}$/.test(val), 'รูปแบบเบอร์โทรไม่ถูกต้อง (เช่น 0812345678)'),
+  customer_line_id: z.string().max(50, 'LINE ID ยาวเกินไป').optional(),
+  message: z.string().max(1000, 'ข้อความยาวเกินไป').optional(),
+}).refine(data => data.customer_phone || data.customer_line_id, {
+  message: 'กรุณากรอกเบอร์โทรหรือ LINE ID อย่างน้อย 1 ช่องทาง',
+  path: ['customer_phone'],
+});
+
+type ContactFormData = z.infer<typeof contactFormSchema>;
 
 export default function ListingDetailPage({
   params,
@@ -45,6 +60,15 @@ export default function ListingDetailPage({
   const turnstileWidgetId = useRef<string | null>(null);
   const [isTurnstileScriptLoaded, setIsTurnstileScriptLoaded] = useState(false);
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors: fieldErrors },
+    reset,
+  } = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema),
+  });
+
   // Render Turnstile imperatively once the script is loaded AND the form container is mounted
   useEffect(() => {
     if (!isTurnstileScriptLoaded || !turnstileContainerRef.current || turnstileWidgetId.current !== null) return;
@@ -56,15 +80,36 @@ export default function ListingDetailPage({
     });
   }, [isTurnstileScriptLoaded, loading]); // re-check when page finishes loading (form becomes visible)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const onFormSubmit = async (data: ContactFormData) => {
     setIsPending(true);
+    setFormState(null);
     try {
-      const formData = new FormData(e.currentTarget);
+      // Get Turnstile token
+      const turnstileResponse = turnstileWidgetId.current
+        ? window.turnstile?.getResponse(turnstileWidgetId.current)
+        : null;
+
+      if (!turnstileResponse && !env.app.isDev) {
+        setFormState({ success: false, message: 'กรุณายืนยันตัวตน (Captcha)' });
+        setIsPending(false);
+        return;
+      }
+
+      const formData = new FormData();
       formData.set('asset_id', id);
+      formData.set('customer_name', data.customer_name);
+      formData.set('customer_phone', data.customer_phone || '');
+      formData.set('customer_line_id', data.customer_line_id || '');
+      formData.set('message', data.message || '');
+      if (turnstileResponse) formData.set('cf-turnstile-response', turnstileResponse);
+
       const res = await fetch('/api/submit-lead', { method: 'POST', body: formData });
-      const data = await res.json() as FormState;
-      setFormState(data);
+      const result = await res.json() as FormState;
+      setFormState(result);
+
+      if (result?.success) {
+        reset();
+      }
     } catch {
       setFormState({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
     } finally {
@@ -74,7 +119,7 @@ export default function ListingDetailPage({
         window.turnstile.reset(turnstileWidgetId.current);
       }
     }
-  }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -414,14 +459,16 @@ export default function ListingDetailPage({
                       {formState.message}
                     </p>
                     <button
-                      onClick={() => window.location.reload()}
+                      onClick={() => {
+                        setFormState(null);
+                      }}
                       className="text-sm text-primary-500 hover:text-primary-600 font-medium"
                     >
                       ส่งข้อความอีกครั้ง
                     </button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
                     {/* General error */}
                     {formState && !formState.success && formState.message && (
                       <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
@@ -435,17 +482,15 @@ export default function ListingDetailPage({
                       </label>
                       <input
                         type="text"
-                        name="customer_name"
-                        required
-                        autoComplete="name"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_name
+                        {...register('customer_name')}
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.customer_name
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
                           }`}
                         placeholder="ชื่อ-นามสกุล"
                       />
-                      {formState?.errors?.customer_name && (
-                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{formState.errors.customer_name}</p>
+                      {fieldErrors.customer_name && (
+                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.customer_name.message}</p>
                       )}
                     </div>
 
@@ -455,16 +500,15 @@ export default function ListingDetailPage({
                       </label>
                       <input
                         type="tel"
-                        name="customer_phone"
-                        autoComplete="tel"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_phone
+                        {...register('customer_phone')}
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.customer_phone
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
                           }`}
                         placeholder="0812345678"
                       />
-                      {formState?.errors?.customer_phone && (
-                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{formState.errors.customer_phone}</p>
+                      {fieldErrors.customer_phone && (
+                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.customer_phone.message}</p>
                       )}
                     </div>
 
@@ -474,16 +518,15 @@ export default function ListingDetailPage({
                       </label>
                       <input
                         type="text"
-                        name="customer_line_id"
-                        autoComplete="off"
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${formState?.errors?.customer_line_id
+                        {...register('customer_line_id')}
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.customer_line_id
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
                           }`}
                         placeholder="@line_id"
                       />
-                      {formState?.errors?.customer_line_id && (
-                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{formState.errors.customer_line_id}</p>
+                      {fieldErrors.customer_line_id && (
+                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.customer_line_id.message}</p>
                       )}
                     </div>
 
@@ -492,16 +535,16 @@ export default function ListingDetailPage({
                         ข้อความ
                       </label>
                       <textarea
-                        name="message"
+                        {...register('message')}
                         rows={3}
-                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow resize-none ${formState?.errors?.message
+                        className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow resize-none ${fieldErrors.message
                             ? 'border-red-400 dark:border-red-600'
                             : 'border-warm-300 dark:border-warm-700'
                           }`}
                         placeholder="สนใจดูทรัพย์สิน, ต้องการข้อมูลเพิ่มเติม..."
                       />
-                      {formState?.errors?.message && (
-                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{formState.errors.message}</p>
+                      {fieldErrors.message && (
+                        <p className="mt-1.5 text-xs text-red-500 dark:text-red-400">{fieldErrors.message.message}</p>
                       )}
                     </div>
 
