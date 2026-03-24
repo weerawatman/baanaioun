@@ -1,9 +1,24 @@
 'use client';
 
 import { useState } from 'react';
+import { z } from 'zod';
 import { supabase } from '@/lib/supabase/client';
 import { Asset, RenovationStatus, ProjectType, PropertyType } from '@/types/database';
 import { Spinner } from '@/shared/components/ui';
+
+const renovationFormSchema = z.object({
+  asset_id: z.string().min(1, 'กรุณาเลือกทรัพย์สิน'),
+  name: z.string().min(1, 'กรุณาระบุชื่อโปรเจกต์'),
+  budget: z.string().refine(v => !v || (!isNaN(Number(v)) && Number(v) >= 0), 'งบประมาณต้องไม่ติดลบ'),
+  start_date: z.string(),
+  end_date: z.string(),
+}).superRefine((data, ctx) => {
+  if (data.end_date && data.start_date && data.end_date < data.start_date) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น', path: ['end_date'] });
+  }
+});
+
+type RenovationFieldErrors = Partial<Record<'asset_id' | 'name' | 'budget' | 'end_date', string>>;
 
 interface AddRenovationProjectModalProps {
   isOpen: boolean;
@@ -36,6 +51,7 @@ export default function AddRenovationProjectModal({
 }: AddRenovationProjectModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<RenovationFieldErrors>({});
 
   const [formData, setFormData] = useState({
     asset_id: '',
@@ -58,8 +74,27 @@ export default function AddRenovationProjectModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setFieldErrors({});
+
+    const validation = renovationFormSchema.safeParse({
+      asset_id: formData.asset_id,
+      name: formData.name,
+      budget: formData.budget,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+    });
+    if (!validation.success) {
+      const errs: RenovationFieldErrors = {};
+      for (const issue of validation.error.issues) {
+        const key = issue.path[0] as keyof RenovationFieldErrors;
+        if (!errs[key]) errs[key] = issue.message;
+      }
+      setFieldErrors(errs);
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const { error: insertError } = await supabase.from('renovation_projects').insert({
@@ -186,8 +221,7 @@ export default function AddRenovationProjectModal({
                 name="asset_id"
                 value={formData.asset_id}
                 onChange={handleChange}
-                required
-                className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.asset_id ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
               >
                 <option value="">-- เลือกทรัพย์สิน --</option>
                 {assets.map(asset => (
@@ -196,6 +230,9 @@ export default function AddRenovationProjectModal({
                   </option>
                 ))}
               </select>
+              {fieldErrors.asset_id && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.asset_id}</p>
+              )}
             </div>
 
             {/* ประเภททรัพย์สินเป้าหมาย (สำหรับโปรเจกต์สร้างใหม่) */}
@@ -237,11 +274,13 @@ export default function AddRenovationProjectModal({
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                required
                 autoComplete="off"
-                className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.name ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                 placeholder={formData.project_type === 'renovation' ? 'เช่น ปรับปรุงห้องน้ำ, ทาสีใหม่' : 'เช่น สร้างบ้าน 2 ชั้น, สร้างทาวน์โฮม'}
               />
+              {fieldErrors.name && (
+                <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.name}</p>
+              )}
             </div>
 
             {/* วันที่เริ่ม และ วันที่สิ้นสุด */}
@@ -268,8 +307,11 @@ export default function AddRenovationProjectModal({
                   name="end_date"
                   value={formData.end_date}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                  className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.end_date ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                 />
+                {fieldErrors.end_date && (
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.end_date}</p>
+                )}
               </div>
             </div>
 
@@ -286,14 +328,16 @@ export default function AddRenovationProjectModal({
                     name="budget"
                     value={formData.budget}
                     onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 pr-12 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                    className={`w-full px-4 py-3 pr-12 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.budget ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                     placeholder="0"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-400 dark:text-warm-500 text-sm">
                     ฿
                   </span>
                 </div>
+                {fieldErrors.budget && (
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.budget}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-warm-700 dark:text-warm-300 mb-1.5">

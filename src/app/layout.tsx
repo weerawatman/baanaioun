@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Thai, IBM_Plex_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const ibmPlexSansThai = IBM_Plex_Sans_Thai({
@@ -46,6 +47,7 @@ export default function RootLayout({
         <div className="min-h-screen">
           {children}
         </div>
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );

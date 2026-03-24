@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function SignUpPage() {
     const router = useRouter();
@@ -63,7 +64,7 @@ export default function SignUpPage() {
 
             if (data.user) {
                 // Profile is created automatically by a database trigger — no frontend check needed
-                alert('สร้างบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ');
+                toast.success('สร้างบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ');
                 router.push('/login');
             } else {
                 setError('ไม่สามารถสร้างผู้ใช้ได้');

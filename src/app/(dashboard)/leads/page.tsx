@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { useLeads } from '@/features/leads/hooks/useLeads';
 import { LeadWithAsset } from '@/features/leads/services/leadsService';
+import { LeadStatus } from '@/types/database';
+import { toast } from 'sonner';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('th-TH', {
@@ -13,42 +16,137 @@ function formatDate(iso: string) {
   });
 }
 
+const STATUS_CONFIG: Record<LeadStatus, { label: string; className: string }> = {
+  new:       { label: 'ใหม่',       className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
+  contacted: { label: 'ติดต่อแล้ว', className: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
+  closed:    { label: 'ปิดแล้ว',    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+};
+
 function Cell({ value }: { value: string | null | undefined }) {
   if (!value) return <span className="text-warm-400 dark:text-warm-600">—</span>;
   return <>{value}</>;
 }
 
-function LeadRow({ lead, index }: { lead: LeadWithAsset; index: number }) {
+interface LeadRowProps {
+  lead: LeadWithAsset;
+  index: number;
+  onUpdateLead: (id: string, data: { status?: LeadStatus; admin_notes?: string | null }) => Promise<void>;
+}
+
+function LeadRow({ lead, index, onUpdateLead }: LeadRowProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [noteValue, setNoteValue] = useState(lead.admin_notes ?? '');
+  const [isSavingNote, setIsSavingNote] = useState(false);
+  const rowBg = index % 2 === 0 ? 'bg-white dark:bg-warm-900' : 'bg-warm-50 dark:bg-warm-800/50';
+
+  const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newStatus = e.target.value as LeadStatus;
+    try {
+      await onUpdateLead(lead.id, { status: newStatus });
+    } catch {
+      toast.error('บันทึกสถานะไม่สำเร็จ');
+    }
+  };
+
+  const handleNoteSave = async () => {
+    const trimmed = noteValue.trim();
+    if (trimmed === (lead.admin_notes ?? '').trim()) return;
+    setIsSavingNote(true);
+    try {
+      await onUpdateLead(lead.id, { admin_notes: trimmed || null });
+    } catch {
+      toast.error('บันทึกโน้ตไม่สำเร็จ');
+    } finally {
+      setIsSavingNote(false);
+    }
+  };
+
   return (
-    <tr className={index % 2 === 0 ? 'bg-white dark:bg-warm-900' : 'bg-warm-50 dark:bg-warm-800/50'}>
-      <td className="px-4 py-3 text-sm text-warm-900 dark:text-warm-100 font-medium">
-        {lead.customer_name}
-      </td>
-      <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
-        <Cell value={lead.customer_phone} />
-      </td>
-      <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
-        <Cell value={lead.customer_line_id} />
-      </td>
-      <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300 max-w-[200px]">
-        {lead.message ? (
-          <span className="line-clamp-2">{lead.message}</span>
-        ) : (
-          <span className="text-warm-400 dark:text-warm-600">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
-        <Cell value={lead.assets?.name ?? null} />
-      </td>
-      <td className="px-4 py-3 text-sm text-warm-500 dark:text-warm-400 whitespace-nowrap">
-        {formatDate(lead.created_at)}
-      </td>
-    </tr>
+    <>
+      <tr className={rowBg}>
+        <td className="px-4 py-3 text-sm text-warm-900 dark:text-warm-100 font-medium">
+          {lead.customer_name}
+        </td>
+        <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
+          <Cell value={lead.customer_phone} />
+        </td>
+        <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
+          <Cell value={lead.customer_line_id} />
+        </td>
+        <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300 max-w-[180px]">
+          {lead.message ? (
+            <span className="line-clamp-2">{lead.message}</span>
+          ) : (
+            <span className="text-warm-400 dark:text-warm-600">—</span>
+          )}
+        </td>
+        <td className="px-4 py-3 text-sm text-warm-700 dark:text-warm-300">
+          <Cell value={lead.assets?.name ?? null} />
+        </td>
+        <td className="px-4 py-3 text-sm text-warm-500 dark:text-warm-400 whitespace-nowrap">
+          {formatDate(lead.created_at)}
+        </td>
+        {/* Status dropdown */}
+        <td className="px-4 py-3">
+          <select
+            value={lead.status ?? 'new'}
+            onChange={handleStatusChange}
+            className={`text-xs font-medium px-2.5 py-1 rounded-full border-0 cursor-pointer focus:ring-2 focus:ring-primary-500 focus:outline-none ${STATUS_CONFIG[lead.status ?? 'new'].className}`}
+          >
+            {(Object.keys(STATUS_CONFIG) as LeadStatus[]).map(s => (
+              <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+            ))}
+          </select>
+        </td>
+        {/* Expand toggle for notes */}
+        <td className="px-3 py-3">
+          <button
+            onClick={() => setIsExpanded(prev => !prev)}
+            title="โน้ต Admin"
+            className={`p-1.5 rounded-lg transition-colors ${
+              isExpanded || lead.admin_notes
+                ? 'text-primary-500 bg-primary-50 dark:bg-primary-900/20'
+                : 'text-warm-400 hover:text-warm-600 hover:bg-warm-100 dark:hover:bg-warm-800'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+        </td>
+      </tr>
+      {/* Expanded notes row */}
+      {isExpanded && (
+        <tr className={rowBg}>
+          <td colSpan={8} className="px-4 pb-3 pt-0">
+            <div className="flex items-end gap-2">
+              <textarea
+                rows={2}
+                value={noteValue}
+                onChange={e => setNoteValue(e.target.value)}
+                onBlur={handleNoteSave}
+                placeholder="บันทึกโน้ต Admin (บันทึกอัตโนมัติเมื่อคลิกออก)"
+                className="flex-1 px-3 py-2 text-sm border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-shadow"
+              />
+              {isSavingNote && (
+                <span className="text-xs text-warm-400 pb-2">กำลังบันทึก...</span>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
 export default function LeadsPage() {
-  const { leads, loading, error, refetch } = useLeads();
+  const { leads, loading, error, refetch, updateLead } = useLeads();
+
+  const counts = leads.reduce(
+    (acc, l) => { acc[l.status ?? 'new']++; return acc; },
+    { new: 0, contacted: 0, closed: 0 } as Record<LeadStatus, number>
+  );
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
@@ -69,12 +167,27 @@ export default function LeadsPage() {
         </button>
       </div>
 
-      {/* Summary badge */}
+      {/* Summary badges */}
       {!loading && !error && (
-        <div className="mb-4">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300">
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-warm-100 dark:bg-warm-800 text-warm-700 dark:text-warm-300">
             ทั้งหมด {leads.length} ราย
           </span>
+          {counts.new > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${STATUS_CONFIG.new.className}`}>
+              {STATUS_CONFIG.new.label} {counts.new}
+            </span>
+          )}
+          {counts.contacted > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${STATUS_CONFIG.contacted.className}`}>
+              {STATUS_CONFIG.contacted.label} {counts.contacted}
+            </span>
+          )}
+          {counts.closed > 0 && (
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${STATUS_CONFIG.closed.className}`}>
+              {STATUS_CONFIG.closed.label} {counts.closed}
+            </span>
+          )}
         </div>
       )}
 
@@ -115,11 +228,13 @@ export default function LeadsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">ข้อความ</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">ทรัพย์สิน</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">วันที่</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">สถานะ</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold text-warm-500 dark:text-warm-400 uppercase tracking-wider">โน้ต</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-warm-100 dark:divide-warm-800">
                 {leads.map((lead, i) => (
-                  <LeadRow key={lead.id} lead={lead} index={i} />
+                  <LeadRow key={lead.id} lead={lead} index={i} onUpdateLead={updateLead} />
                 ))}
               </tbody>
             </table>

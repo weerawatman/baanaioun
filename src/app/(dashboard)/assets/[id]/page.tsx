@@ -11,6 +11,7 @@ import ProjectTimelineGallery from '@/features/assets/components/ProjectTimeline
 import Link from 'next/link';
 import { useAuth } from '@/shared/contexts/AuthContext';
 import { formatCurrency, formatDate, handleError, PROPERTY_TYPE_LABELS, ASSET_STATUS_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
+import { toast } from 'sonner';
 import { StatusBadge, Spinner } from '@/shared/components/ui';
 import { assetService } from '@/features/assets/services/assetService';
 import { imageService } from '@/features/assets/services/imageService';
@@ -117,13 +118,13 @@ export default function AssetDetailPage() {
 
         // Validate file type
         if (!file.type.startsWith('image/')) {
-          alert(`ไฟล์ ${file.name} ไม่ใช่รูปภาพ`);
+          toast.error(`ไฟล์ ${file.name} ไม่ใช่รูปภาพ`);
           continue;
         }
 
         // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
-          alert(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 5MB`);
+          toast.error(`ไฟล์ ${file.name} มีขนาดใหญ่เกิน 5MB`);
           continue;
         }
 
@@ -137,14 +138,14 @@ export default function AssetDetailPage() {
           );
         } catch (err) {
           const appError = handleError(err);
-          alert(appError.message);
+          toast.error(appError.message);
         }
       }
 
       await fetchImages();
     } catch (err) {
       handleError(err);
-      alert('เกิดข้อผิดพลาดในการอัปโหลด');
+      toast.error('เกิดข้อผิดพลาดในการอัปโหลด');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -159,7 +160,7 @@ export default function AssetDetailPage() {
       await fetchImages();
     } catch (err) {
       handleError(err);
-      alert('เกิดข้อผิดพลาดในการลบรูปภาพ');
+      toast.error('เกิดข้อผิดพลาดในการลบรูปภาพ');
     }
   };
 

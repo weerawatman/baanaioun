@@ -114,6 +114,8 @@ export interface PublicAsset {
   status: 'ready_for_sale' | 'ready_for_rent';
 }
 
+export type LeadStatus = 'new' | 'contacted' | 'closed';
+
 export interface Lead {
   id: string;
   created_at: string;
@@ -122,6 +124,8 @@ export interface Lead {
   customer_phone?: string | null;
   customer_line_id?: string | null;
   message?: string | null;
+  status: LeadStatus;
+  admin_notes?: string | null;
 }
 
 export type Json =

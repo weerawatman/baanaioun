@@ -1,11 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { Asset, PropertyType, AssetStatus } from '@/types/database';
 import MapPickerDynamic from '@/shared/components/map/MapPickerDynamic';
 import { PROPERTY_TYPE_OPTIONS, ASSET_STATUS_OPTIONS } from '@/shared/utils';
 import { Spinner } from '@/shared/components/ui';
 import { useAssetMutations } from '@/features/assets/hooks/useAssetMutations';
+
+const nonNegativeNum = (label: string) =>
+  z.string().refine(v => !v || (!isNaN(Number(v)) && Number(v) >= 0), `${label}ต้องไม่ติดลบ`);
+
+const assetFormSchema = z.object({
+  title_deed_number: z.string().min(1, 'กรุณาระบุเลขที่โฉนด'),
+  purchase_price: z.string().refine(
+    v => !isNaN(Number(v)) && Number(v) >= 0,
+    'ราคาซื้อต้องเป็นตัวเลขที่ไม่ติดลบ'
+  ),
+  appraised_value: nonNegativeNum('ราคาประเมิน'),
+  mortgage_amount: nonNegativeNum('วงเงินจำนอง'),
+  status: z.string(),
+  tenant_name: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.status === 'rented' && !data.tenant_name?.trim()) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'กรุณาระบุชื่อผู้เช่า', path: ['tenant_name'] });
+  }
+});
+
+type AssetFieldErrors = Partial<Record<keyof z.infer<typeof assetFormSchema>, string>>;
 
 interface AddAssetModalProps {
   isOpen: boolean;
@@ -19,6 +41,7 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
   const { createAsset, updateAsset, creating, updating } = useAssetMutations();
   const loading = creating || updating;
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<AssetFieldErrors>({});
 
   const buildFormData = (a?: Asset | null) => ({
     title_deed_number: a?.title_deed_number || '',
@@ -48,6 +71,8 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       setFormData(buildFormData(asset));
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(null);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFieldErrors({});
     }
   }, [isOpen, asset]);
 
@@ -59,6 +84,25 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
+
+    const validation = assetFormSchema.safeParse({
+      title_deed_number: formData.title_deed_number,
+      purchase_price: formData.purchase_price,
+      appraised_value: formData.appraised_value,
+      mortgage_amount: formData.mortgage_amount,
+      status: formData.status,
+      tenant_name: formData.tenant_name,
+    });
+    if (!validation.success) {
+      const errs: AssetFieldErrors = {};
+      for (const issue of validation.error.issues) {
+        const key = issue.path[0] as keyof AssetFieldErrors;
+        if (!errs[key]) errs[key] = issue.message;
+      }
+      setFieldErrors(errs);
+      return;
+    }
 
     const dataToSave = {
       title_deed_number: formData.title_deed_number,
@@ -161,11 +205,13 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                   name="title_deed_number"
                   value={formData.title_deed_number}
                   onChange={handleChange}
-                  required
                   autoComplete="off"
-                  className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                  className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.title_deed_number ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                   placeholder="เช่น 12345"
                 />
+                {fieldErrors.title_deed_number && (
+                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.title_deed_number}</p>
+                )}
               </div>
 
               {/* ชื่อทรัพย์สิน */}
@@ -279,14 +325,16 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                       name="purchase_price"
                       value={formData.purchase_price}
                       onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 pr-12 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      className={`w-full px-4 py-3 pr-12 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.purchase_price ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                       placeholder="0"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-400 dark:text-warm-500 text-sm">
                       ฿
                     </span>
                   </div>
+                  {fieldErrors.purchase_price && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.purchase_price}</p>
+                  )}
                 </div>
 
                 <div>
@@ -313,13 +361,16 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                       name="appraised_value"
                       value={formData.appraised_value}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      className={`w-full px-4 py-3 pr-12 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.appraised_value ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                       placeholder="0"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-400 dark:text-warm-500 text-sm">
                       ฿
                     </span>
                   </div>
+                  {fieldErrors.appraised_value && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.appraised_value}</p>
+                  )}
                 </div>
               </div>
 
@@ -351,13 +402,16 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                       name="mortgage_amount"
                       value={formData.mortgage_amount}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 pr-12 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      className={`w-full px-4 py-3 pr-12 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.mortgage_amount ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                       placeholder="0"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-warm-400 dark:text-warm-500 text-sm">
                       ฿
                     </span>
                   </div>
+                  {fieldErrors.mortgage_amount && (
+                    <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.mortgage_amount}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -414,11 +468,13 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
                       name="tenant_name"
                       value={formData.tenant_name}
                       onChange={handleChange}
-                      required={formData.status === 'rented'}
                       autoComplete="off"
-                      className="w-full px-4 py-3 border border-warm-300 dark:border-warm-700 rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow"
+                      className={`w-full px-4 py-3 border rounded-xl bg-white dark:bg-warm-800 text-warm-900 dark:text-warm-50 focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-shadow ${fieldErrors.tenant_name ? 'border-red-400 dark:border-red-600' : 'border-warm-300 dark:border-warm-700'}`}
                       placeholder="ชื่อ-นามสกุล ผู้เช่า"
                     />
+                    {fieldErrors.tenant_name && (
+                      <p className="mt-1 text-xs text-red-500 dark:text-red-400">{fieldErrors.tenant_name}</p>
+                    )}
                   </div>
 
                   <div>

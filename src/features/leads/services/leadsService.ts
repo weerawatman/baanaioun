@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-import { Lead } from '@/types/database';
+import { Lead, LeadStatus } from '@/types/database';
 
 export interface LeadWithAsset extends Lead {
   assets: { name: string } | null;
@@ -14,6 +14,14 @@ class LeadsService {
 
     if (error) throw new Error(error.message);
     return (data ?? []) as LeadWithAsset[];
+  }
+
+  async updateLead(id: string, data: { status?: LeadStatus; admin_notes?: string | null }): Promise<void> {
+    const { error } = await supabase
+      .from('leads')
+      .update(data)
+      .eq('id', id);
+    if (error) throw new Error(error.message);
   }
 }
 
