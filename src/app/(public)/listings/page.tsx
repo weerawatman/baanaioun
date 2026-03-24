@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { PublicAsset } from '@/types/database';
 import Link from 'next/link';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 import { formatCurrency, PROPERTY_TYPE_LABELS } from '@/shared/utils';
 
@@ -16,6 +17,7 @@ interface ListingWithImage extends PublicAsset {
 
 export default function ListingsPage() {
   const router = useRouter();
+  const { loading: authLoading } = useAuth();
   const [listings, setListings] = useState<ListingWithImage[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,6 +77,9 @@ export default function ListingsPage() {
     fetchListings();
   }, []);
 
+  // Total loading state includes Auth initialization to prevent "No items" flash
+  const isInitialLoading = loading || authLoading;
+
   return (
     <div className="bg-warm-50 dark:bg-warm-950 min-h-screen">
       {/* Header */}
@@ -92,16 +97,18 @@ export default function ListingsPage() {
                 อสังหาริมทรัพย์ที่พร้อมขายและให้เช่า
               </p>
             </div>
-            <div className="flex items-center gap-3 text-sm text-warm-500 dark:text-warm-400">
-              <span>{listings.length} รายการ</span>
-            </div>
+            {!isInitialLoading && (
+              <div className="flex items-center gap-3 text-sm text-warm-500 dark:text-warm-400">
+                <span>{listings.length} รายการ</span>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {loading ? (
+        {isInitialLoading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex items-center gap-3 text-warm-500 dark:text-warm-400">
               <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">

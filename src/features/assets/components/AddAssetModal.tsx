@@ -79,8 +79,6 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
       tenant_contact: formData.status === 'rented' ? (formData.tenant_contact || null) : null,
     };
 
-    console.log('Submitting asset form...', { mode, dataToSave });
-
     try {
       if (mode === 'edit' && asset) {
         await updateAsset(asset.id, dataToSave);

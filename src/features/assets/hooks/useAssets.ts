@@ -50,10 +50,13 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
     const isAbort = error instanceof Error && error.name === 'AbortError';
     const displayError = isAbort ? null : (error instanceof Error ? error : error ? new Error(String(error)) : null);
 
-    // isRetrying: failed AND SWR is making another attempt AND there is no data yet to show.
-    // If data is already visible on screen, suppress the banner — the retry is transparent to the user.
+    // isRetrying: 
+    // 1. There is an error (excluding AbortError)
+    // 2. SWR is currently validating (making a request)
+    // 3. We don't have any data yet to show (initial load failed)
+    // OR: SWR is revalidating after a non-abort error occurred previously.
     const hasData = (result?.data?.length ?? 0) > 0;
-    const isRetrying = !!displayError && isValidating && !hasData;
+    const isRetrying = (!!displayError || isAbort) && isValidating && !hasData;
 
     return {
         assets: result?.data ?? [],

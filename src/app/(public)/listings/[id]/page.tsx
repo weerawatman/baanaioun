@@ -78,26 +78,30 @@ export default function ListingDetailPage({
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
+      try {
+        const [assetResult, imagesResult] = await Promise.all([
+          supabase.from('public_assets').select('*').eq('id', id).single(),
+          supabase
+            .from('public_asset_images')
+            .select('*')
+            .eq('asset_id', id)
+            .order('is_primary', { ascending: false })
+            .order('created_at', { ascending: true }),
+        ]);
 
-      const [assetResult, imagesResult] = await Promise.all([
-        supabase.from('public_assets').select('*').eq('id', id).single(),
-        supabase
-          .from('public_asset_images')
-          .select('*')
-          .eq('asset_id', id)
-          .order('is_primary', { ascending: false })
-          .order('created_at', { ascending: true }),
-      ]);
+        if (assetResult.error || !assetResult.data) {
+          setNotFound(true);
+          return;
+        }
 
-      if (assetResult.error || !assetResult.data) {
-        setNotFound(true);
+        setAsset(assetResult.data);
+        setImages((imagesResult.data as PublicImage[]) || []);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
+        console.error('Error fetching listing details:', err);
+      } finally {
         setLoading(false);
-        return;
       }
-
-      setAsset(assetResult.data);
-      setImages((imagesResult.data as PublicImage[]) || []);
-      setLoading(false);
     }
 
     fetchData();
@@ -123,13 +127,17 @@ export default function ListingDetailPage({
 
   if (loading) {
     return (
-      <div className="bg-warm-50 dark:bg-warm-950 min-h-screen flex items-center justify-center">
-        <div className="flex items-center gap-3 text-warm-500 dark:text-warm-400">
-          <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span className="text-lg">กำลังโหลด...</span>
+      <div className="bg-warm-50 dark:bg-warm-950 min-h-screen">
+        {/* Skeleton Header */}
+        <div className="bg-white dark:bg-warm-900 border-b border-warm-200 dark:border-warm-800 h-14" />
+        {/* Skeleton Hero */}
+        <div className="w-full h-[60vh] bg-warm-200 dark:bg-warm-800 animate-pulse" />
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+          <div className="h-10 bg-warm-200 dark:bg-warm-800 rounded-xl w-2/3 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-32 bg-warm-200 dark:bg-warm-800 rounded-2xl animate-pulse" />
+            <div className="h-32 bg-warm-200 dark:bg-warm-800 rounded-2xl animate-pulse" />
+          </div>
         </div>
       </div>
     );
@@ -192,45 +200,55 @@ export default function ListingDetailPage({
       </header>
 
       {/* Hero image */}
-      {heroImage ? (
-        <div
-          className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-warm-200 dark:bg-warm-800 cursor-pointer"
-          onClick={() => openLightbox(0)}
-        >
-          <img
-            src={heroImage.url}
-            alt={heroImage.caption || asset.name}
-            className="w-full h-full object-cover"
-            loading="eager"
-            fetchPriority="high"
-            decoding="async"
-          />
-          {/* Image count overlay */}
-          {images.length > 1 && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                openLightbox(0);
-              }}
-              className="absolute bottom-4 right-4 px-4 py-2 bg-black/60 text-white rounded-xl text-sm font-medium backdrop-blur-sm flex items-center gap-2 hover:bg-black/70 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      <div className="relative w-full overflow-hidden bg-warm-200 dark:bg-warm-800">
+        {heroImage ? (
+          <div
+            className="relative w-full max-h-[65vh] md:max-h-[70vh] flex justify-center cursor-pointer overflow-hidden"
+            onClick={() => openLightbox(0)}
+          >
+            <img
+              src={heroImage.url}
+              alt={heroImage.caption || asset.name}
+              className="w-full h-full object-cover"
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
+            />
+            {/* Image count overlay */}
+            {images.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openLightbox(0);
+                }}
+                className="absolute bottom-6 right-6 px-4 py-2 bg-black/60 text-white rounded-xl text-sm font-medium backdrop-blur-sm flex items-center gap-2 hover:bg-black/70 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                ดูรูปทั้งหมด ({images.length})
+              </button>
+            )}
+
+            {/* Scroll Cue */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/80 animate-bounce pointer-events-none">
+              <span className="text-[10px] font-medium uppercase tracking-widest">เลื่อนดูข้อมูล</span>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
-              ดูรูปทั้งหมด ({images.length})
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="w-full aspect-[16/9] md:aspect-[21/9] bg-warm-100 dark:bg-warm-800 flex items-center justify-center">
-          <div className="text-center text-warm-400 dark:text-warm-600">
-            <svg className="w-20 h-20 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>ไม่มีรูปภาพ</span>
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="w-full h-[40vh] bg-warm-100 dark:bg-warm-800 flex items-center justify-center">
+            <div className="text-center text-warm-400 dark:text-warm-600">
+              <svg className="w-20 h-20 mx-auto mb-3 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <span className="text-sm font-medium">รอการอัปเดตรูปภาพ</span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Main content */}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 md:py-10">
