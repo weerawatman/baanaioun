@@ -61,33 +61,8 @@ export default function SignUpPage() {
                 return;
             }
 
-            // Check if user was created
             if (data.user) {
-                // Wait a moment for the trigger to create the profile
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                // Verify profile was created
-                const { data: profile, error: profileError } = await supabase
-                    .from('user_profiles')
-                    .select('*')
-                    .eq('id', data.user.id)
-                    .single();
-
-                if (profileError) {
-                    console.error('Profile check error:', profileError);
-                    setError('สร้างผู้ใช้สำเร็จ แต่เกิดข้อผิดพลาดในการสร้างโปรไฟล์');
-                    setLoading(false);
-                    return;
-                }
-
-                if (!profile) {
-                    console.error('Profile not created by trigger');
-                    setError('เกิดข้อผิดพลาดในการสร้างโปรไฟล์ผู้ใช้');
-                    setLoading(false);
-                    return;
-                }
-
-                // Success! Redirect to login or dashboard
+                // Profile is created automatically by a database trigger — no frontend check needed
                 alert('สร้างบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ');
                 router.push('/login');
             } else {

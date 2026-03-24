@@ -36,8 +36,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('user_profiles')
         .select('*')
         .eq('id', userId)
-        .single();
-      if (!cancelled) setProfile(data);
+        .maybeSingle();
+      if (!cancelled) setProfile(data ?? null);
     };
 
     const getSession = async () => {

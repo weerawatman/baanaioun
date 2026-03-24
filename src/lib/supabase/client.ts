@@ -1,4 +1,9 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { env } from '@/config/env';
 
-export const supabase = createBrowserClient(env.supabase.url, env.supabase.anonKey);
+export const supabase = createBrowserClient(env.supabase.url, env.supabase.anonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});
