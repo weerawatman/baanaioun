@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { PublicAsset } from '@/types/database';
 import Link from 'next/link';
@@ -138,12 +139,12 @@ export default function ListingsPage() {
                 {/* Image */}
                 <div className="aspect-[4/3] bg-warm-100 dark:bg-warm-800 relative overflow-hidden">
                   {listing.primary_image_url ? (
-                    <img
+                    <Image
                       src={listing.primary_image_url}
                       alt={listing.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                      decoding="async"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-warm-400 dark:text-warm-600">

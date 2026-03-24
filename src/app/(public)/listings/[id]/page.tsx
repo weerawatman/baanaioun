@@ -4,6 +4,7 @@ export const runtime = 'edge';
 
 import { useEffect, useState, use, useRef } from 'react';
 import Script from 'next/script';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
@@ -206,13 +207,13 @@ export default function ListingDetailPage({
             className="relative w-full max-h-[65vh] md:max-h-[70vh] flex justify-center cursor-pointer overflow-hidden"
             onClick={() => openLightbox(0)}
           >
-            <img
+            <Image
               src={heroImage.url}
               alt={heroImage.caption || asset.name}
-              className="w-full h-full object-cover"
-              loading="eager"
-              fetchPriority="high"
-              decoding="async"
+              fill
+              priority
+              className="object-cover"
+              sizes="100vw"
             />
             {/* Image count overlay */}
             {images.length > 1 && (
@@ -364,13 +365,13 @@ export default function ListingDetailPage({
                       className="relative group cursor-pointer"
                       onClick={() => openLightbox(index)}
                     >
-                      <div className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800">
-                        <img
+                      <div className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 relative">
+                        <Image
                           src={image.url}
                           alt={image.caption || `รูปที่ ${index + 1}`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          loading="lazy"
-                          decoding="async"
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          sizes="(max-width: 768px) 50vw, 33vw"
                         />
                       </div>
                       {image.caption && (
@@ -578,13 +579,15 @@ export default function ListingDetailPage({
           )}
 
           {/* Image */}
-          <img
-            src={selectedImage}
-            alt={`รูปที่ ${currentImageIndex + 1}`}
-            className="max-w-[90vw] max-h-[85vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-            decoding="async"
-          />
+          <div className="relative w-full h-[85vh]" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={selectedImage}
+              alt={`รูปที่ ${currentImageIndex + 1}`}
+              fill
+              className="object-contain"
+              sizes="90vw"
+            />
+          </div>
 
           {/* Next button */}
           {images.length > 1 && (

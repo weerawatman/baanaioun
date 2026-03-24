@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { AssetImage, ImageCategory } from '@/types/database';
 
 interface TimelinePhase {
@@ -158,15 +159,15 @@ export default function ProjectTimelineGallery({
                     {phaseImages.map((image) => (
                       <div key={image.id} className="relative group">
                         <div
-                          className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 cursor-pointer"
+                          className="aspect-square rounded-xl overflow-hidden bg-warm-100 dark:bg-warm-800 cursor-pointer relative"
                           onClick={() => onImageClick(image.url)}
                         >
-                          <img
+                          <Image
                             src={image.url}
                             alt={image.caption || 'Asset image'}
-                            className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                            loading="lazy"
-                            decoding="async"
+                            fill
+                            className="object-cover transition-transform group-hover:scale-105"
+                            sizes="(max-width: 768px) 50vw, 25vw"
                           />
                         </div>
                         <span
