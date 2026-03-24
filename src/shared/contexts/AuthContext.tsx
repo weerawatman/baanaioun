@@ -81,10 +81,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // Page Visibility: when user returns to this tab after a long absence,
-    // proactively refresh the session before any query fires, so there is
-    // no JWT-expiry error on the first interaction.
-    const handleVisibilityChange = async () => {
+    // Shared refresh logic: called when tab regains visibility OR window focus.
+    // getSession() auto-refreshes the access token if it has expired, using
+    // the refresh token in the cookie — no manual token management needed.
+    const refreshOnReturn = async () => {
       if (document.visibilityState !== 'visible' || cancelled) {
         stopKeepalive();
         return;
@@ -98,14 +98,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Page Visibility: tab switching (e.g. Cmd+Tab in same browser window)
+    const handleVisibilityChange = () => { refreshOnReturn(); };
+
+    // Window Focus: returning from another app entirely (e.g. Alt+Tab OS-level).
+    // visibilitychange may not fire in this scenario on some browsers/OS.
+    const handleWindowFocus = () => { refreshOnReturn(); };
+
     getSession();
     if (document.visibilityState === 'visible') startKeepalive();
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         // Skip the initial INITIAL_SESSION event to avoid double fetch
         if (initialLoad || cancelled) return;
+
+        // Handle explicit sign-out first — clear state immediately
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setProfile(null);
+          return;
+        }
 
         setUser(session?.user ?? null);
 
@@ -121,6 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
       stopKeepalive();
     };
   }, []);

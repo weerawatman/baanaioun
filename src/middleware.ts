@@ -14,14 +14,18 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protected routes — check session (local cookie read, no network call unless token expired)
-  const { user, supabaseResponse } = await updateSession(request);
+  const { user, allowThrough, supabaseResponse } = await updateSession(request);
 
-  if (!user) {
+  if (!user && !allowThrough) {
+    // No session and no auth cookies — user is definitively logged out
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
+  // allowThrough: session refresh failed transiently but auth cookies exist.
+  // Proceed to the page — the client's autoRefreshToken + focus/visibility
+  // handlers will recover the session without disrupting the user.
   return supabaseResponse;
 }
 
