@@ -132,6 +132,18 @@ body {
   z-index: 0;
 }
 
+/* Cloudflare Turnstile — override the 300 px default so the widget fills its container.
+   Turnstile injects an inner <div style="width:300px"> and an <iframe> that ignore
+   the size:'flexible' option on some browsers; this selector chain forces full width. */
+.cf-turnstile-wrapper,
+.cf-turnstile-wrapper > div {
+  width: 100% !important;
+  max-width: 100% !important;
+}
+.cf-turnstile-wrapper iframe {
+  width: 100% !important;
+}
+
 /* Card hover effects for desktop only */
 @media (hover: hover) {
   .hover-lift:hover {

@@ -487,7 +487,7 @@ export default function ListingDetailPage({
                     </div>
 
                     {/* Cloudflare Turnstile */}
-                    <div ref={turnstileContainerRef} className="w-full overflow-hidden rounded-lg" />
+                    <div ref={turnstileContainerRef} className="cf-turnstile-wrapper w-full" />
 
                     <button
                       type="submit"
