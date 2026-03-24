@@ -5,8 +5,9 @@ import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
 async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
-  // Skip verification in development (no real token available)
-  if (env.app.isDev && !env.turnstile.secretKey) return true;
+  // Skip verification in development — Turnstile site keys are domain-locked
+  // and will not render on localhost, so no token is ever submitted
+  if (env.app.isDev) return true;
 
   const body = new URLSearchParams({
     secret: env.turnstile.secretKey,
