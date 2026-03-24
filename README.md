@@ -160,11 +160,14 @@ baanaioun/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (dashboard)/        # หน้าที่ต้อง login
+│   │   │   ├── layout.tsx      # AuthProvider + Sidebar wrapper
 │   │   │   ├── assets/         # จัดการทรัพย์สิน
 │   │   │   ├── renovations/    # โครงการก่อสร้าง/ปรับปรุง
 │   │   │   ├── leads/          # ลูกค้าที่สนใจ
 │   │   │   └── reports/        # รายงาน
-│   │   ├── (public)/listings/  # ประกาศสาธารณะ (ไม่ต้อง login)
+│   │   ├── (public)/           # หน้าสาธารณะ (ไม่ต้อง login)
+│   │   │   ├── layout.tsx      # AuthProvider wrapper ⚠️ ต้องมีทุก route group
+│   │   │   └── listings/       # ประกาศขาย/เช่า + ฟอร์มติดต่อ
 │   │   └── api/submit-lead/    # Edge API: รับฟอร์มสนใจ + ส่ง email
 │   │
 │   ├── features/               # Business logic แยกตาม feature
@@ -175,6 +178,7 @@ baanaioun/
 │   │   └── leads/              # services/ hooks/
 │   │
 │   ├── shared/
+│   │   ├── contexts/           # AuthContext — ต้องครอบทุก route group ด้วย layout.tsx
 │   │   ├── components/ui/      # Button, Card, Modal, Spinner ...
 │   │   ├── hooks/              # useAuth, useDebounce, useLocalStorage ...
 │   │   └── utils/              # constants, format, validation, errorHandler ...
