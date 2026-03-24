@@ -18,6 +18,7 @@ Production: https://www.baanaioun.com (Cloudflare Pages)
 | Forms | react-hook-form + zod v4 |
 | Notifications | sonner (`<Toaster>` in root layout) |
 | CAPTCHA | Cloudflare Turnstile (imperative render) |
+| Error Tracking | Sentry (`@sentry/nextjs`) |
 | Package Manager | npm |
 | Deployment | Cloudflare Pages (Edge Runtime) |
 
@@ -43,12 +44,12 @@ src/
 │   ├── layout.tsx                  # Root layout — Toaster only, NO AuthProvider here
 │   ├── (dashboard)/
 │   │   ├── layout.tsx              # AuthProvider + Sidebar — dashboard routes
-│   │   ├── assets/
+│   │   ├── assets/                 # list + [id]/ detail
 │   │   ├── renovations/
-│   │   ├── expenses/
-│   │   ├── income/
 │   │   ├── leads/
 │   │   └── reports/
+│   │   # หมายเหตุ: features/expenses/ และ features/income/ มี services+hooks+components
+│   │   # แต่ยังไม่มี dashboard page route (ข้อมูลแสดงผ่าน assets/[id] แทน)
 │   ├── (public)/
 │   │   ├── layout.tsx              # AuthProvider — public routes ⚠️ see rule below
 │   │   └── listings/
@@ -69,8 +70,9 @@ src/
 │   ├── contexts/AuthContext.tsx    # useAuth() — must have AuthProvider ancestor
 │   ├── components/ui/              # Button, Card, Modal, Input, Spinner, StatusBadge, EmptyState
 │   ├── components/layout/Sidebar
-│   ├── components/MapPicker MapPickerDynamic
-│   └── utils/                      # constants, format, validation, errorHandler, logger
+│   ├── components/map/             # MapPicker.tsx + MapPickerDynamic.tsx
+│   ├── hooks/                      # useModal, useDebounce, useLocalStorage
+│   └── utils/                      # constants, format, validation, errorHandler, logger, geo, withTimeout
 │
 ├── types/database.ts               # All DB types — source of truth
 ├── config/env.ts                   # Type-safe env var access (never use process.env directly)
@@ -120,6 +122,12 @@ process.env.NEXT_PUBLIC_SUPABASE_URL
 // ✅ Correct
 import { env } from '@/config/env';
 env.supabase.url
+env.supabase.anonKey
+env.turnstile.siteKey
+env.sentry.dsn
+env.line.channelAccessToken  // LINE Notify — lead notifications
+env.line.adminUserId
+env.app.isDev
 ```
 
 ### ⚠️ Rule 4: Supabase Client Is a Singleton — Never Re-export as a Function
@@ -268,7 +276,7 @@ try { setLoading(true); await fetch(); } catch { }
 MapPicker must be dynamically imported (no SSR):
 ```tsx
 import dynamic from 'next/dynamic';
-const MapPickerDynamic = dynamic(() => import('@/shared/components/MapPickerDynamic'), {
+const MapPickerDynamic = dynamic(() => import('@/shared/components/map/MapPickerDynamic'), {
   ssr: false,
   loading: () => <div className="h-64 bg-warm-100 rounded-xl animate-pulse" />,
 });
