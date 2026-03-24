@@ -1,5 +1,6 @@
 export const runtime = 'edge';
 
+import { after } from 'next/server';
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
@@ -71,6 +72,41 @@ async function sendEmailNotification(params: NotifyEmailParams): Promise<void> {
         to: [notificationEmail],
         subject: `[Baanaioun] ${params.customerName} สนใจ: ${params.assetName}`,
         html,
+      }),
+    });
+  } catch {
+    // Notification failure must never break the form submission
+  }
+}
+
+async function sendLineNotification(params: NotifyEmailParams): Promise<void> {
+  try {
+    const { channelAccessToken, adminUserId } = env.line;
+    if (!channelAccessToken || !adminUserId) return;
+
+    const listingUrl = `${env.app.url}/listings/${params.assetId}`;
+
+    const lines = [
+      '🏠 มีลูกค้าใหม่สนใจทรัพย์สิน!',
+      '',
+      `🏡 ทรัพย์สิน: ${params.assetName}`,
+      `👤 ชื่อ: ${params.customerName}`,
+      params.customerPhone  ? `📱 เบอร์โทร: ${params.customerPhone}`  : null,
+      params.customerLineId ? `💬 LINE ID: ${params.customerLineId}`   : null,
+      params.message        ? `📝 ข้อความ: ${params.message}`          : null,
+      '',
+      `🔗 ${listingUrl}`,
+    ].filter((l): l is string => l !== null);
+
+    await fetch('https://api.line.me/v2/bot/message/push', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${channelAccessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: adminUserId,
+        messages: [{ type: 'text', text: lines.join('\n') }],
       }),
     });
   } catch {
@@ -162,13 +198,21 @@ export async function POST(request: Request): Promise<Response> {
     const assetData = assetRes.ok ? (await assetRes.json() as { name: string }[]) : [];
     const assetName = assetData[0]?.name ?? 'ทรัพย์สิน';
 
-    await sendEmailNotification({
+    const notifyParams: NotifyEmailParams = {
       assetId: asset_id!,
       assetName,
       customerName: customer_name,
       customerPhone: customer_phone,
       customerLineId: customer_line_id,
       message,
+    };
+
+    // Fire notifications after the response is sent — does not block the user
+    after(async () => {
+      await Promise.all([
+        sendEmailNotification(notifyParams),
+        sendLineNotification(notifyParams),
+      ]);
     });
 
     return Response.json({ success: true, message: 'ส่งข้อมูลสำเร็จ เราจะติดต่อกลับโดยเร็วที่สุด' });

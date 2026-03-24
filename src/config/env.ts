@@ -25,4 +25,8 @@ export const env = {
   sentry: {
     dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
   },
+  line: {
+    channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? '',
+    adminUserId: process.env.LINE_ADMIN_USER_ID ?? '',
+  },
 } as const;
