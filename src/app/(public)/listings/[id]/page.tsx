@@ -51,6 +51,7 @@ export default function ListingDetailPage({
     turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
       sitekey: env.turnstile.siteKey,
       theme: 'auto',
+      size: 'flexible',
     });
   }, [isTurnstileScriptLoaded, loading]); // re-check when page finishes loading (form becomes visible)
 
@@ -486,7 +487,7 @@ export default function ListingDetailPage({
                     </div>
 
                     {/* Cloudflare Turnstile */}
-                    <div ref={turnstileContainerRef} />
+                    <div ref={turnstileContainerRef} className="w-full overflow-hidden rounded-lg" />
 
                     <button
                       type="submit"
