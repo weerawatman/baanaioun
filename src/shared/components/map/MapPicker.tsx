@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { parseLatLong, formatLatLong } from '@/lib/geo';
+import { parseLatLong, formatLatLong } from '@/shared/utils/geo';
 
 // Fix Leaflet default marker icons (broken by webpack bundling)
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;

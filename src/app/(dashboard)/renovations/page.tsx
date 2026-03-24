@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType, AssetStatus } from '@/types/database';
 import AddRenovationProjectModal from '@/features/renovations/components/AddRenovationProjectModal';
 import AddExpenseModal from '@/features/expenses/components/AddExpenseModal';

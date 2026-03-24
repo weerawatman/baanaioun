@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 
 const navigation = [
   { name: 'ทรัพย์สิน', nameEn: 'Assets', href: '/assets', icon: BuildingIcon },

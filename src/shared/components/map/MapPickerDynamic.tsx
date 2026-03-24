@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 
-const MapPicker = dynamic(() => import('@/shared/components/MapPicker'), {
+const MapPicker = dynamic(() => import('@/shared/components/map/MapPicker'), {
   ssr: false,
   loading: () => (
     <div className="space-y-2">

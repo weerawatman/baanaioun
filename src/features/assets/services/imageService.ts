@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { AssetImage, ImageCategory } from '@/types/database';
 import { AppError, ErrorCodes, logger } from '@/shared/utils';
 

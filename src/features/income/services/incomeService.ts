@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { Income } from '@/types/database';
 import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 

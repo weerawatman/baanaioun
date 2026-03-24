@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Asset, PropertyType, AssetStatus } from '@/types/database';
-import MapPickerDynamic from '@/shared/components/MapPickerDynamic';
+import MapPickerDynamic from '@/shared/components/map/MapPickerDynamic';
 import { PROPERTY_TYPE_OPTIONS, ASSET_STATUS_OPTIONS } from '@/shared/utils';
 import { Spinner } from '@/shared/components/ui';
 import { useAssetMutations } from '@/features/assets/hooks/useAssetMutations';

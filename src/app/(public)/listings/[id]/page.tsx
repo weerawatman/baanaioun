@@ -4,10 +4,10 @@ export const runtime = 'edge';
 
 import { useEffect, useState, use, useRef } from 'react';
 import Script from 'next/script';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
-import { parseLatLong } from '@/lib/geo';
+import { parseLatLong } from '@/shared/utils/geo';
 import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
 import { env } from '@/config/env';
 

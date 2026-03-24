@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { Asset, Income, Expense, ExpenseCategory } from '@/types/database';
 import AddIncomeModal from '@/features/income/components/AddIncomeModal';
 

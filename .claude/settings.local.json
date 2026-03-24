@@ -48,7 +48,8 @@
       "Bash(node -p \"JSON.parse\\(require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\)\\)[0].messages.map\\(m=>m.line+'''':''''+m.ruleId\\).join\\(''''\\\\n''''\\)\")",
       "Bash(grep -n \"runtime\\\\|''use client''\\\\|''use server''\" src/app/\\\\\\(public\\\\\\)/listings/[id]/page.tsx src/app/api/submit-lead/route.ts src/app/\\\\\\(dashboard\\\\\\)/assets/[id]/page.tsx src/app/\\\\\\(dashboard\\\\\\)/page.tsx src/app/signup/page.tsx src/app/login/page.tsx src/app/\\\\\\(public\\\\\\)/listings/page.tsx src/app/\\\\\\(dashboard\\\\\\)/leads/page.tsx src/app/\\\\\\(dashboard\\\\\\)/renovations/page.tsx src/app/\\\\\\(dashboard\\\\\\)/reports/page.tsx src/app/\\\\\\(dashboard\\\\\\)/assets/page.tsx)",
       "Bash(head -5 src/app/\\\\\\(dashboard\\\\\\)/page.tsx src/app/signup/page.tsx src/app/login/page.tsx src/app/\\\\\\(public\\\\\\)/listings/page.tsx src/app/\\\\\\(dashboard\\\\\\)/leads/page.tsx src/app/\\\\\\(dashboard\\\\\\)/renovations/page.tsx src/app/\\\\\\(dashboard\\\\\\)/reports/page.tsx src/app/\\\\\\(dashboard\\\\\\)/assets/page.tsx)",
-      "Bash(head -10 src/app/\\\\\\(dashboard\\\\\\)/layout.tsx)"
+      "Bash(head -10 src/app/\\\\\\(dashboard\\\\\\)/layout.tsx)",
+      "Bash(node:*)"
     ]
   }
 }

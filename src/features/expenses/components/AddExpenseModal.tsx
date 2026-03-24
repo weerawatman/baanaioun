@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase/client';
 import { ExpenseCategory } from '@/types/database';
 import { EXPENSE_CATEGORY_OPTIONS } from '@/shared/utils';
 import { Spinner } from '@/shared/components/ui';

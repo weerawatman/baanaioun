@@ -9,7 +9,7 @@ import NextImage from 'next/image';
 import { Asset, AssetImage, ImageCategory, RenovationProject } from '@/types/database';
 import ProjectTimelineGallery from '@/features/assets/components/ProjectTimelineGallery';
 import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/shared/contexts/AuthContext';
 import { formatCurrency, formatDate, handleError, PROPERTY_TYPE_LABELS, ASSET_STATUS_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
 import { StatusBadge, Spinner } from '@/shared/components/ui';
 import { assetService } from '@/features/assets/services/assetService';
