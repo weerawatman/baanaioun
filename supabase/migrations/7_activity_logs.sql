@@ -19,24 +19,26 @@ CREATE POLICY "Admins can view all logs"
     FOR SELECT 
     USING (
         EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE profiles.id = auth.uid() AND profiles.role = 'admin'
+            SELECT 1 FROM public.user_profiles
+            WHERE user_profiles.id = auth.uid() AND user_profiles.role = 'admin'
         )
     );
 
 -- Trigger function for logging changes
 CREATE OR REPLACE FUNCTION public.log_asset_changes()
 RETURNS TRIGGER AS $$
+DECLARE
+    current_user_id UUID := auth.uid();
 BEGIN
     IF (TG_OP = 'UPDATE') THEN
         INSERT INTO public.activity_logs (user_id, action, table_name, record_id, old_data, new_data)
-        VALUES (auth.uid(), TG_OP, TG_TABLE_NAME, OLD.id, to_jsonb(OLD), to_jsonb(NEW));
+        VALUES (current_user_id, TG_OP, TG_TABLE_NAME, OLD.id, to_jsonb(OLD), to_jsonb(NEW));
     ELSIF (TG_OP = 'DELETE') THEN
         INSERT INTO public.activity_logs (user_id, action, table_name, record_id, old_data)
-        VALUES (auth.uid(), TG_OP, TG_TABLE_NAME, OLD.id, to_jsonb(OLD));
+        VALUES (current_user_id, TG_OP, TG_TABLE_NAME, OLD.id, to_jsonb(OLD));
     ELSIF (TG_OP = 'INSERT') THEN
         INSERT INTO public.activity_logs (user_id, action, table_name, record_id, new_data)
-        VALUES (auth.uid(), TG_OP, TG_TABLE_NAME, NEW.id, to_jsonb(NEW));
+        VALUES (current_user_id, TG_OP, TG_TABLE_NAME, NEW.id, to_jsonb(NEW));
     END IF;
     RETURN NULL;
 END;
