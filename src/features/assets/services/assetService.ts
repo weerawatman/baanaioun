@@ -23,7 +23,6 @@ export type UpdateAssetInput = Partial<CreateAssetInput>;
 
 /** Map common Postgres/PostgREST error codes to actionable Thai messages */
 function formatDbError(error: { message: string; code?: string; hint?: string; details?: string }): string {
-    console.error('--- formatDbError Trace ---', { code: error.code, message: error.message, hint: error.hint, details: error.details });
     switch (error.code) {
         case '42501':  // insufficient_privilege (RLS block)
             return 'ไม่มีสิทธิ์บันทึกข้อมูล — กรุณาออกจากระบบแล้วเข้าใหม่';
@@ -201,27 +200,14 @@ export class AssetService {
      */
     async createAsset(input: CreateAssetInput): Promise<Asset> {
         try {
-            console.log('--- Database Insert Payload Trace ---');
-            console.log('Payload:', JSON.stringify(input, null, 2));
-            console.log('Table: assets');
             logger.info('Creating asset', { input });
 
-            // Reduce timeout to 30s for faster feedback during debugging
             const { data, error } = await withTimeout(
-                supabase.from('assets').insert(input).select().single(),
-                30000
+                supabase.from('assets').insert(input).select().single()
             );
 
             if (error) {
-                console.error('--- Database Insert Error Trace ---');
-                console.error('Full Error Object:', JSON.stringify(error, null, 2));
-                console.error('Error Code:', error.code);
-                console.error('Error Message:', error.message);
-                
-                // Alert user with specific database error for debugging
-                const rawMsg = `DB Error ${error.code}: ${error.message}`;
-                alert(`ไม่สามารถบันทึกได้: ${rawMsg}`);
-
+                logger.error('Error creating asset', error, { code: error.code });
                 throw new AppError(
                     formatDbError(error),
                     error.code === '42501' ? ErrorCodes.FORBIDDEN : ErrorCodes.DATABASE_ERROR,
@@ -234,18 +220,9 @@ export class AssetService {
                 throw new AppError('Failed to retrieve created asset', ErrorCodes.DATABASE_ERROR, 500);
             }
 
-            console.log('--- Database Insert Success ---');
-            console.log('Inserted ID:', data.id);
             logger.info('Asset created successfully', { id: data.id });
             return data;
         } catch (error) {
-            console.error('--- Unexpected Error in assetService.createAsset ---');
-            console.error(error);
-            
-            if (error instanceof Error && (error.message.includes('timeout') || error.message.includes('timed out'))) {
-              alert('การบันทึกค้าง (Timeout) — อาจเกิดจาก Trigger ในฐานข้อมูลมีปัญหา หรือระบบ Lock');
-            }
-            
             logger.error('Unexpected error in createAsset', error);
             throw error;
         }

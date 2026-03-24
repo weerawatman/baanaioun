@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let initialLoad = true;
     let cancelled = false;
+    let pingIntervalId: ReturnType<typeof setInterval> | null = null;
 
     const fetchProfile = async (userId: string) => {
       const { data } = await supabase
@@ -54,7 +55,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // Keepalive: lightweight ping every 4 minutes while tab is visible.
+    // Prevents Supabase free-tier connection pool from going cold, so the
+    // first user action after being idle never hits a 30-90s warm-up delay.
+    const PING_INTERVAL_MS = 4 * 60 * 1000;
+
+    const ping = async () => {
+      if (document.visibilityState !== 'visible') return;
+      try {
+        await supabase.from('assets').select('id', { count: 'exact', head: true });
+      } catch {
+        // Silent — keepalive failures are non-critical
+      }
+    };
+
+    const startKeepalive = () => {
+      if (pingIntervalId) clearInterval(pingIntervalId);
+      pingIntervalId = setInterval(ping, PING_INTERVAL_MS);
+    };
+
+    const stopKeepalive = () => {
+      if (pingIntervalId) {
+        clearInterval(pingIntervalId);
+        pingIntervalId = null;
+      }
+    };
+
+    // Page Visibility: when user returns to this tab after a long absence,
+    // proactively refresh the session before any query fires, so there is
+    // no JWT-expiry error on the first interaction.
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible' || cancelled) {
+        stopKeepalive();
+        return;
+      }
+      startKeepalive();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!cancelled) setUser(session?.user ?? null);
+      } catch {
+        // Silent — auth refresh failure is handled by onAuthStateChange
+      }
+    };
+
     getSession();
+    if (document.visibilityState === 'visible') startKeepalive();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -74,6 +120,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      stopKeepalive();
     };
   }, []);
 
