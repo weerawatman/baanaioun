@@ -50,7 +50,10 @@
       "Bash(head -5 src/app/\\\\\\(dashboard\\\\\\)/page.tsx src/app/signup/page.tsx src/app/login/page.tsx src/app/\\\\\\(public\\\\\\)/listings/page.tsx src/app/\\\\\\(dashboard\\\\\\)/leads/page.tsx src/app/\\\\\\(dashboard\\\\\\)/renovations/page.tsx src/app/\\\\\\(dashboard\\\\\\)/reports/page.tsx src/app/\\\\\\(dashboard\\\\\\)/assets/page.tsx)",
       "Bash(head -10 src/app/\\\\\\(dashboard\\\\\\)/layout.tsx)",
       "Bash(node:*)",
-      "Bash(npx tsx:*)"
+      "Bash(npx tsx:*)",
+      "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/layout.tsx)",
+      "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(public\\\\\\)/layout.tsx)",
+      "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/expenses/)"
     ]
   }
 }
