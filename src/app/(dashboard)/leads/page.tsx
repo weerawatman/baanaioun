@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLeads } from '@/features/leads/hooks/useLeads';
 import { LeadWithAsset } from '@/features/leads/services/leadsService';
 import { LeadStatus } from '@/types/database';
@@ -37,6 +37,13 @@ function LeadRow({ lead, index, onUpdateLead }: LeadRowProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [noteValue, setNoteValue] = useState(lead.admin_notes ?? '');
   const [isSavingNote, setIsSavingNote] = useState(false);
+
+  // Sync noteValue when lead data changes (e.g. SWR revalidation), but only when not expanded/editing
+  useEffect(() => {
+    if (!isExpanded) {
+      setNoteValue(lead.admin_notes ?? '');
+    }
+  }, [lead.admin_notes, isExpanded]);
   const rowBg = index % 2 === 0 ? 'bg-white dark:bg-warm-900' : 'bg-warm-50 dark:bg-warm-800/50';
 
   const handleStatusChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {

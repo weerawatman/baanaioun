@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { supabase } from '@/lib/supabase/client';
 import { Asset, RenovationStatus, ProjectType, PropertyType } from '@/types/database';
@@ -64,6 +64,25 @@ export default function AddRenovationProjectModal({
     project_type: 'renovation' as ProjectType,
     target_property_type: '' as PropertyType | '',
   });
+
+  // Reset form and errors whenever the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setFieldErrors({});
+      setFormData({
+        asset_id: '',
+        name: '',
+        description: '',
+        start_date: new Date().toISOString().split('T')[0],
+        end_date: '',
+        budget: '',
+        status: 'planned',
+        project_type: 'renovation',
+        target_property_type: '',
+      });
+    }
+  }, [isOpen]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
