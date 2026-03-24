@@ -222,9 +222,12 @@ export default function ListingDetailPage({
 
   return (
     <div className="bg-warm-50 dark:bg-warm-950 min-h-screen">
+      {/* Load Turnstile after hydration so the widget container is guaranteed
+          to be in the DOM. afterInteractive avoids the "unused preload" warning
+          that lazyOnload can trigger when idle-loading is deferred too long. */}
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={() => setIsTurnstileScriptLoaded(true)}
       />
       {/* Header */}
