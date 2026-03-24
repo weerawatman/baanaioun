@@ -72,23 +72,23 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
   const markerPosition: L.LatLngExpression | null = coords ? [coords.lat, coords.lng] : null;
 
   const handleCoordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    setCoordInput(raw);
+    setCoordInput(e.target.value);
     setCoordInputError(null);
-    if (!raw.trim()) return;
-    const parsed = parseLatLong(raw);
-    if (parsed) {
-      onChange(formatLatLong(parsed.lat, parsed.lng));
-      setFlyTarget([parsed.lat, parsed.lng]);
-      setGeoError(null);
-    }
   };
 
   const handleCoordInputBlur = () => {
-    if (!coordInput.trim()) return;
+    if (!coordInput.trim()) {
+      if (value) onChange(null);
+      return;
+    }
     const parsed = parseLatLong(coordInput);
     if (!parsed) {
       setCoordInputError('รูปแบบพิกัดไม่ถูกต้อง เช่น 13.756331, 100.501762');
+    } else {
+      onChange(formatLatLong(parsed.lat, parsed.lng));
+      setFlyTarget([parsed.lat, parsed.lng]);
+      setGeoError(null);
+      setCoordInputError(null);
     }
   };
 
