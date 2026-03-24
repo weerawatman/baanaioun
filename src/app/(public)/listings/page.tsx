@@ -22,49 +22,54 @@ export default function ListingsPage() {
   useEffect(() => {
     async function fetchListings() {
       setLoading(true);
+      try {
+        // Run both queries in parallel — public_asset_images is already scoped to public assets
+        const [assetsResult, imagesResult] = await Promise.all([
+          supabase
+            .from('public_assets')
+            .select('*')
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('public_asset_images')
+            .select('asset_id, url')
+            .eq('is_primary', true),
+        ]);
 
-      // Run both queries in parallel — public_asset_images is already scoped to public assets
-      const [assetsResult, imagesResult] = await Promise.all([
-        supabase
-          .from('public_assets')
-          .select('*')
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('public_asset_images')
-          .select('asset_id, url')
-          .eq('is_primary', true),
-      ]);
-
-      if (assetsResult.error || !assetsResult.data) {
-        console.error('Error fetching listings:', assetsResult.error);
-        setLoading(false);
-        return;
-      }
-
-      const assets = assetsResult.data;
-
-      if (assets.length === 0) {
-        setListings([]);
-        setLoading(false);
-        return;
-      }
-
-      // Build a map of asset_id -> primary image url
-      const imageMap = new Map<string, string>();
-      if (imagesResult.data) {
-        for (const img of imagesResult.data) {
-          imageMap.set(img.asset_id, img.url);
+        if (assetsResult.error || !assetsResult.data) {
+          console.error('Error fetching listings:', assetsResult.error);
+          return;
         }
+
+        const assets = assetsResult.data;
+
+        if (assets.length === 0) {
+          setListings([]);
+          return;
+        }
+
+        // Build a map of asset_id -> primary image url
+        const imageMap = new Map<string, string>();
+        if (imagesResult.data) {
+          for (const img of imagesResult.data) {
+            imageMap.set(img.asset_id, img.url);
+          }
+        }
+
+        // Merge images into listings
+        const merged: ListingWithImage[] = assets.map((asset) => ({
+          ...asset,
+          primary_image_url: imageMap.get(asset.id) || null,
+        }));
+
+        setListings(merged);
+      } catch (err) {
+        // AbortErrors are intentional browser cancellations — ignore silently
+        if (err instanceof Error && err.name === 'AbortError') return;
+        console.error('Error fetching listings:', err);
+      } finally {
+        // Always clear the loading state — even on AbortError or unexpected throws
+        setLoading(false);
       }
-
-      // Merge images into listings
-      const merged: ListingWithImage[] = assets.map((asset) => ({
-        ...asset,
-        primary_image_url: imageMap.get(asset.id) || null,
-      }));
-
-      setListings(merged);
-      setLoading(false);
     }
 
     fetchListings();

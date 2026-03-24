@@ -35,8 +35,8 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
             revalidateOnFocus: true,
             focusThrottleInterval: 60000, // revalidate at most once per minute on tab focus
             keepPreviousData: true,       // show cached data while refetching (no blank screen)
-            errorRetryCount: 3,           // retry up to 3 times on error (handles Supabase cold start)
-            errorRetryInterval: 5000,     // wait 5s between retries
+            errorRetryCount: 2,           // 2 SWR retries — service layer refreshes session before each
+            errorRetryInterval: 3000,     // 3 s between retries
             // AbortErrors are intentional cancellations — not real failures, don't retry or surface them
             shouldRetryOnError: (err: Error) => err.name !== 'AbortError',
         }
@@ -50,8 +50,10 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
     const isAbort = error instanceof Error && error.name === 'AbortError';
     const displayError = isAbort ? null : (error instanceof Error ? error : error ? new Error(String(error)) : null);
 
-    // isRetrying: a previous fetch failed (non-abort) and SWR is currently making another attempt
-    const isRetrying = !!displayError && isValidating;
+    // isRetrying: failed AND SWR is making another attempt AND there is no data yet to show.
+    // If data is already visible on screen, suppress the banner — the retry is transparent to the user.
+    const hasData = (result?.data?.length ?? 0) > 0;
+    const isRetrying = !!displayError && isValidating && !hasData;
 
     return {
         assets: result?.data ?? [],
