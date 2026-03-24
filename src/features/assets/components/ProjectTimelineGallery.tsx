@@ -165,6 +165,8 @@ export default function ProjectTimelineGallery({
                             src={image.url}
                             alt={image.caption || 'Asset image'}
                             className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                         <span

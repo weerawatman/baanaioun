@@ -2,12 +2,14 @@
 
 export const runtime = 'edge';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState, use, useRef } from 'react';
+import Script from 'next/script';
 import { supabase } from '@/lib/supabase';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
 import { parseLatLong } from '@/lib/geo';
 import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
+import { env } from '@/config/env';
 
 
 
@@ -38,6 +40,19 @@ export default function ListingDetailPage({
   type FormState = { success: boolean; errors?: Record<string, string>; message?: string } | null;
   const [formState, setFormState] = useState<FormState>(null);
   const [isPending, setIsPending] = useState(false);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
+  const [isTurnstileScriptLoaded, setIsTurnstileScriptLoaded] = useState(false);
+
+  // Render Turnstile imperatively once the script is loaded AND the form container is mounted
+  useEffect(() => {
+    if (!isTurnstileScriptLoaded || !turnstileContainerRef.current || turnstileWidgetId.current !== null) return;
+    if (!window.turnstile) return;
+    turnstileWidgetId.current = window.turnstile.render(turnstileContainerRef.current, {
+      sitekey: env.turnstile.siteKey,
+      theme: 'auto',
+    });
+  }, [isTurnstileScriptLoaded, loading]); // re-check when page finishes loading (form becomes visible)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -52,6 +67,10 @@ export default function ListingDetailPage({
       setFormState({ success: false, message: 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง' });
     } finally {
       setIsPending(false);
+      // Reset Turnstile widget so user can submit again if needed
+      if (turnstileWidgetId.current !== null && typeof window !== 'undefined' && window.turnstile) {
+        window.turnstile.reset(turnstileWidgetId.current);
+      }
     }
   }
 
@@ -148,6 +167,11 @@ export default function ListingDetailPage({
 
   return (
     <div className="bg-warm-50 dark:bg-warm-950 min-h-screen">
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="lazyOnload"
+        onLoad={() => setIsTurnstileScriptLoaded(true)}
+      />
       {/* Header */}
       <header className="bg-white dark:bg-warm-900 border-b border-warm-200 dark:border-warm-800 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -176,6 +200,9 @@ export default function ListingDetailPage({
             src={heroImage.url}
             alt={heroImage.caption || asset.name}
             className="w-full h-full object-cover"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
           {/* Image count overlay */}
           {images.length > 1 && (
@@ -323,6 +350,8 @@ export default function ListingDetailPage({
                           src={image.url}
                           alt={image.caption || `รูปที่ ${index + 1}`}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </div>
                       {image.caption && (
@@ -456,6 +485,9 @@ export default function ListingDetailPage({
                       )}
                     </div>
 
+                    {/* Cloudflare Turnstile */}
+                    <div ref={turnstileContainerRef} />
+
                     <button
                       type="submit"
                       disabled={isPending}
@@ -532,6 +564,7 @@ export default function ListingDetailPage({
             alt={`รูปที่ ${currentImageIndex + 1}`}
             className="max-w-[90vw] max-h-[85vh] object-contain"
             onClick={(e) => e.stopPropagation()}
+            decoding="async"
           />
 
           {/* Next button */}

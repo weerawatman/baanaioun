@@ -3,6 +3,29 @@ export const runtime = 'edge';
 import { env } from '@/config/env';
 import { isValidPhoneNumber, isLengthInRange, isEmpty } from '@/shared/utils';
 
+async function verifyTurnstile(token: string, ip: string): Promise<boolean> {
+  // Skip verification in development (no real token available)
+  if (env.app.isDev && !env.turnstile.secretKey) return true;
+
+  const body = new URLSearchParams({
+    secret: env.turnstile.secretKey,
+    response: token,
+    remoteip: ip,
+  });
+
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    });
+    const data = await res.json() as { success: boolean };
+    return data.success === true;
+  } catch {
+    return false;
+  }
+}
+
 interface NotifyEmailParams {
   assetId: string;
   assetName: string;
@@ -60,6 +83,13 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 export async function POST(request: Request): Promise<Response> {
   try {
     const formData = await request.formData();
+
+    // Verify Turnstile token before processing the form
+    const turnstileToken = formData.get('cf-turnstile-response') as string | null;
+    const ip = request.headers.get('CF-Connecting-IP') ?? request.headers.get('X-Forwarded-For') ?? '';
+    if (!turnstileToken || !(await verifyTurnstile(turnstileToken, ip))) {
+      return Response.json({ success: false, message: 'การยืนยันตัวตนล้มเหลว กรุณาลองใหม่อีกครั้ง' }, { status: 400 });
+    }
 
     const asset_id = formData.get('asset_id') as string | null;
     const customer_name = (formData.get('customer_name') as string | null)?.trim() ?? '';

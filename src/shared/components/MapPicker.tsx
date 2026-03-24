@@ -47,6 +47,7 @@ function FlyToHandler({ center }: { center: L.LatLngExpression | null }) {
 }
 
 export default function MapPicker({ value, onChange }: MapPickerProps) {
+  const [showMap, setShowMap] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [flyTarget, setFlyTarget] = useState<L.LatLngExpression | null>(null);
@@ -201,29 +202,45 @@ export default function MapPicker({ value, onChange }: MapPickerProps) {
         <p className="text-xs text-red-500 dark:text-red-400">{geoError}</p>
       )}
 
-      {/* Map */}
-      <div className="rounded-xl overflow-hidden border border-warm-300 dark:border-warm-700">
-        <MapContainer
-          center={markerPosition || BANGKOK_CENTER}
-          zoom={markerPosition ? PLACED_ZOOM : DEFAULT_ZOOM}
-          style={{ height: 300, width: '100%' }}
-          scrollWheelZoom={true}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <MapClickHandler onMapClick={handleMapClick} />
-          <FlyToHandler center={flyTarget} />
-          {markerPosition && (
-            <Marker
-              position={markerPosition}
-              draggable
-              eventHandlers={{ dragend: handleMarkerDrag }}
+      {/* Map — only rendered after user explicitly requests it */}
+      {showMap ? (
+        <div className="rounded-xl overflow-hidden border border-warm-300 dark:border-warm-700">
+          <MapContainer
+            center={markerPosition || BANGKOK_CENTER}
+            zoom={markerPosition ? PLACED_ZOOM : DEFAULT_ZOOM}
+            style={{ height: 300, width: '100%' }}
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-          )}
-        </MapContainer>
-      </div>
+            <MapClickHandler onMapClick={handleMapClick} />
+            <FlyToHandler center={flyTarget} />
+            {markerPosition && (
+              <Marker
+                position={markerPosition}
+                draggable
+                eventHandlers={{ dragend: handleMarkerDrag }}
+              />
+            )}
+          </MapContainer>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setShowMap(true)}
+          className="w-full h-[300px] rounded-xl border border-dashed border-warm-300 dark:border-warm-600 bg-warm-50 dark:bg-warm-800/50 flex flex-col items-center justify-center gap-2 text-warm-500 dark:text-warm-400 hover:bg-warm-100 dark:hover:bg-warm-800 hover:border-warm-400 dark:hover:border-warm-500 transition-colors"
+        >
+          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+          <span className="text-sm font-medium">
+            {coords ? 'แสดงตำแหน่งบนแผนที่' : 'เปิดแผนที่เพื่อปักหมุด'}
+          </span>
+          <span className="text-xs">คลิกเพื่อโหลดแผนที่แบบ Interactive</span>
+        </button>
+      )}
 
       {/* Coordinate display & clear */}
       {coords && (

@@ -18,4 +18,11 @@ export const env = {
     notificationEmail: process.env.NOTIFICATION_EMAIL ?? '',
     fromEmail: process.env.NOTIFICATION_FROM_EMAIL ?? '',
   },
+  turnstile: {
+    siteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? '',
+    secretKey: process.env.TURNSTILE_SECRET_KEY ?? '',
+  },
+  sentry: {
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? '',
+  },
 } as const;

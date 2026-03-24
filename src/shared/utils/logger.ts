@@ -1,13 +1,11 @@
+import * as Sentry from '@sentry/nextjs';
+
 type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 interface LogMetadata {
     [key: string]: unknown;
 }
 
-/**
- * Simple logger utility
- * Can be extended to send logs to external services (e.g., Sentry, LogRocket)
- */
 class Logger {
     private isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -39,10 +37,11 @@ class Logger {
 
         console.error(this.formatMessage('error', message, errorMeta));
 
-        // TODO: Send to error tracking service (e.g., Sentry)
-        // if (process.env.NODE_ENV === 'production') {
-        //   Sentry.captureException(error, { extra: meta });
-        // }
+        if (process.env.NODE_ENV === 'production') {
+            Sentry.captureException(error instanceof Error ? error : new Error(message), {
+                extra: errorMeta,
+            });
+        }
     }
 
     debug(message: string, meta?: LogMetadata): void {

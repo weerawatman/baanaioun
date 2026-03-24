@@ -130,6 +130,8 @@ export default function ListingsPage() {
                       src={listing.primary_image_url}
                       alt={listing.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center text-warm-400 dark:text-warm-600">
