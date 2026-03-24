@@ -7,6 +7,7 @@ interface UseAssetsReturn {
     assets: Asset[];
     loading: boolean;
     error: Error | null;
+    isRetrying: boolean;
     totalCount: number;
     refetch: (showLoading?: boolean) => Promise<void>;
 }
@@ -27,7 +28,7 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
         pagination?.pageSize ?? null,
     ];
 
-    const { data: result, error, isLoading, mutate } = useSWR(
+    const { data: result, error, isLoading, isValidating, mutate } = useSWR(
         key,
         () => assetService.getAssets(filters, pagination),
         {
@@ -36,6 +37,8 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
             keepPreviousData: true,       // show cached data while refetching (no blank screen)
             errorRetryCount: 3,           // retry up to 3 times on error (handles Supabase cold start)
             errorRetryInterval: 5000,     // wait 5s between retries
+            // AbortErrors are intentional cancellations — not real failures, don't retry or surface them
+            shouldRetryOnError: (err: Error) => err.name !== 'AbortError',
         }
     );
 
@@ -43,10 +46,18 @@ export function useAssets(filters?: AssetFilters, pagination?: AssetPagination):
         await mutate();
     }, [mutate]);
 
+    // Surface AbortErrors only as a retrying state, never as a hard error banner
+    const isAbort = error instanceof Error && error.name === 'AbortError';
+    const displayError = isAbort ? null : (error instanceof Error ? error : error ? new Error(String(error)) : null);
+
+    // isRetrying: a previous fetch failed (non-abort) and SWR is currently making another attempt
+    const isRetrying = !!displayError && isValidating;
+
     return {
         assets: result?.data ?? [],
         loading: isLoading,
-        error: error instanceof Error ? error : error ? new Error(String(error)) : null,
+        error: displayError,
+        isRetrying,
         totalCount: result?.count ?? 0,
         refetch,
     };

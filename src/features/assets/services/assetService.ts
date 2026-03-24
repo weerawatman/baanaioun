@@ -48,12 +48,15 @@ export class AssetService {
      * Fetch assets with optional filters and server-side pagination
      */
     async getAssets(filters?: AssetFilters, pagination?: AssetPagination): Promise<AssetsResult> {
-        try {
-            logger.info('Fetching assets', { filters, pagination });
+        // AbortErrors are intentional cancellations (e.g. browser backgrounding a tab) — pass through
+        const isAbortError = (err: unknown) =>
+            err instanceof Error && (err.name === 'AbortError' || err instanceof DOMException);
 
-            let query = supabase
-                .from('assets')
-                .select(`
+        logger.info('Fetching assets', { filters, pagination });
+
+        let query = supabase
+            .from('assets')
+            .select(`
           id,
           asset_code,
           name,
@@ -71,46 +74,43 @@ export class AssetService {
           location_lat_long,
           created_at
         `, { count: 'exact' })
-                .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false });
 
-            // Apply filters
-            if (filters?.status && filters.status !== 'all') {
-                query = query.eq('status', filters.status);
-            }
-
-            if (filters?.propertyType) {
-                query = query.eq('property_type', filters.propertyType);
-            }
-
-            if (filters?.search) {
-                query = query.or(`name.ilike.%${filters.search}%,title_deed_number.ilike.%${filters.search}%`);
-            }
-
-            // Apply server-side pagination
-            if (pagination) {
-                const from = (pagination.page - 1) * pagination.pageSize;
-                const to = from + pagination.pageSize - 1;
-                query = query.range(from, to);
-            }
-
-            const { data, error, count } = await withTimeout(query);
-
-            if (error) {
-                logger.error('Error fetching assets', error);
-                throw new AppError(
-                    'Failed to fetch assets',
-                    ErrorCodes.DATABASE_ERROR,
-                    500,
-                    { originalError: error }
-                );
-            }
-
-            logger.info('Assets fetched successfully', { count: data?.length || 0 });
-            return { data: data || [], count: count ?? 0 };
-        } catch (error) {
-            logger.error('Unexpected error in getAssets', error);
-            throw error;
+        if (filters?.status && filters.status !== 'all') {
+            query = query.eq('status', filters.status);
         }
+        if (filters?.propertyType) {
+            query = query.eq('property_type', filters.propertyType);
+        }
+        if (filters?.search) {
+            query = query.or(`name.ilike.%${filters.search}%,title_deed_number.ilike.%${filters.search}%`);
+        }
+        if (pagination) {
+            const from = (pagination.page - 1) * pagination.pageSize;
+            const to = from + pagination.pageSize - 1;
+            query = query.range(from, to);
+        }
+
+        // Execute query — on first failure, refresh the session and retry once.
+        // This recovers from stale JWTs, 406 header mismatches, and transient network blips after idle.
+        let result = await withTimeout(query).catch(async (err) => {
+            if (isAbortError(err)) throw err; // never retry intentional aborts
+            try { await supabase.auth.refreshSession(); } catch { /* non-fatal */ }
+            return withTimeout(query); // single retry after session refresh
+        });
+
+        if (result.error) {
+            logger.error('Error fetching assets', result.error);
+            throw new AppError(
+                'Failed to fetch assets',
+                ErrorCodes.DATABASE_ERROR,
+                500,
+                { originalError: result.error }
+            );
+        }
+
+        logger.info('Assets fetched successfully', { count: result.data?.length ?? 0 });
+        return { data: result.data ?? [], count: result.count ?? 0 };
     }
 
     /**

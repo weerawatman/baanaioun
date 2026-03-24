@@ -32,7 +32,7 @@ export default function AssetsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [statusCounts, setStatusCounts] = useState<Record<AssetStatus | 'all', number>>(DEFAULT_STATUS_COUNTS);
 
-  const { assets, loading, error, refetch, totalCount } = useAssets(
+  const { assets, loading, error, isRetrying, refetch, totalCount } = useAssets(
     { status: statusFilter !== 'all' ? statusFilter : undefined },
     { page: currentPage, pageSize: PAGE_SIZE },
   );
@@ -193,7 +193,19 @@ export default function AssetsPage() {
         </div>
       </div>
 
-      {error && (
+      {/* Soft banner: retrying after an error — show while SWR is making another attempt */}
+      {isRetrying && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-700 dark:text-amber-400 text-sm flex items-center gap-3">
+          <svg className="w-4 h-4 flex-shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
+          <span>กำลังโหลดข้อมูลใหม่...</span>
+        </div>
+      )}
+
+      {/* Hard error banner: shown only when all retries have been exhausted */}
+      {error && !isRetrying && (
         <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm flex items-center gap-3">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
