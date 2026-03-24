@@ -68,6 +68,7 @@ export class AssetService {
           land_tax_due_date,
           tenant_name,
           tenant_contact,
+          location_lat_long,
           created_at
         `, { count: 'exact' })
                 .order('created_at', { ascending: false });
