@@ -12,14 +12,19 @@ export function isValidEmail(email: string): boolean {
 
 /**
  * Check if phone number is valid (Thai format)
+ * Accepts: 0XXXXXXXXX (local) or +66XXXXXXXXX / 0066XXXXXXXXX (international)
  */
 export function isValidPhoneNumber(phone: string): boolean {
-    // Remove spaces and dashes
-    const cleaned = phone.replace(/[\s-]/g, '');
+    // Remove spaces, dashes, and parentheses
+    const cleaned = phone.replace(/[\s\-()]/g, '');
 
-    // Thai phone number: 10 digits starting with 0
-    const phoneRegex = /^0\d{9}$/;
-    return phoneRegex.test(cleaned);
+    // Local: 10 digits starting with 0
+    if (/^0\d{9}$/.test(cleaned)) return true;
+
+    // International: +66 or 0066 followed by 9 digits (without leading 0)
+    if (/^(\+66|0066)\d{9}$/.test(cleaned)) return true;
+
+    return false;
 }
 
 /**
