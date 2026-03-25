@@ -53,7 +53,15 @@
       "Bash(npx tsx:*)",
       "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/layout.tsx)",
       "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(public\\\\\\)/layout.tsx)",
-      "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/expenses/)"
+      "Bash(ls -la /c/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/expenses/)",
+      "Bash(cat C:/Projects/baanaioun/src/app/\\\\\\(dashboard\\\\\\)/assets/page.tsx)",
+      "Bash(grep -n \"Image\\\\|NextImage\" /c/Projects/baanaioun/src/app/\\\\\\(public\\\\\\)/listings/[id]/page.tsx)",
+      "Bash(cat \"C:/Projects/baanaioun/src/app/\\(dashboard\\)/assets/page.tsx\")",
+      "Bash(cat \"C:\\\\Projects\\\\baanaioun\\\\src\\\\app\\\\\\(dashboard\\)\\\\assets\\\\[id]\\\\page.tsx\")",
+      "mcp__Desktop_Commander__read_process_output",
+      "Bash(cat \"C:\\\\Projects\\\\baanaioun\\\\src\\\\app\\\\\\(public\\)\\\\listings\\\\[id]\\\\page.tsx\")",
+      "Bash(cat \"C:\\\\Projects\\\\baanaioun\\\\src\\\\app\\\\\\(public\\)\\\\listings\\\\page.tsx\")",
+      "Bash(head -n 500 \"C:\\\\Projects\\\\baanaioun\\\\src\\\\app\\\\\\(public\\)\\\\listings\\\\[id]\\\\page.tsx\")"
     ]
   }
 }
