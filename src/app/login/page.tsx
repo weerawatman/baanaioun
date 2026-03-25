@@ -17,19 +17,24 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (signInError) {
-      setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+      if (signInError) {
+        setError('อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+        return;
+      }
+
+      router.push('/');
+      router.refresh();
+    } catch {
+      setError('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
       setLoading(false);
-      return;
     }
-
-    router.push('/');
-    router.refresh();
   };
 
   return (
