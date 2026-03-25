@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { Asset, RenovationProjectWithAsset, Expense, RenovationStatus, ExpenseCategory, ProjectType, PropertyType, AssetStatus } from '@/types/database';
 import AddRenovationProjectModal from '@/features/renovations/components/AddRenovationProjectModal';
 import AddExpenseModal from '@/features/expenses/components/AddExpenseModal';
 import { expenseService } from '@/features/expenses/services/expenseService';
+import { renovationService } from '@/features/renovations/services/renovationService';
+import { assetService } from '@/features/assets/services/assetService';
 import {
   formatCurrency,
   formatDateShort as formatDate,
@@ -13,6 +14,7 @@ import {
   EXPENSE_CATEGORY_LABELS,
   PROJECT_TYPE_LABELS,
   PROPERTY_TYPE_LABELS,
+  logger,
 } from '@/shared/utils';
 
 interface ProjectCardProps {
@@ -351,68 +353,51 @@ export default function RenovationsPage() {
   } | null>(null);
 
   const fetchAssets = async () => {
-    const { data, error } = await supabase
-      .from('assets')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Error fetching assets:', error);
-    } else {
-      setAssets(data || []);
+    try {
+      const result = await assetService.getAssets();
+      setAssets(result.data);
+    } catch (err) {
+      logger.error('Error fetching assets for renovations page', err);
     }
   };
 
   const fetchProjects = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('renovation_projects')
-      .select('*, assets(*)')
-      .order('created_at', { ascending: false });
+    try {
+      const loadedProjects = await renovationService.getRenovationsWithAssets();
+      setProjects(loadedProjects);
 
-    if (error) {
-      console.error('Error fetching projects:', error);
+      // Batch load ALL expenses for all projects in one query
+      if (loadedProjects.length > 0) {
+        const projectIds = loadedProjects.map(p => p.id);
+        const allExpenses = await expenseService.getExpensesForProjects(projectIds);
+
+        const expensesMap: Record<string, Expense[]> = {};
+        projectIds.forEach(id => { expensesMap[id] = []; });
+        allExpenses.forEach(exp => {
+          if (exp.renovation_project_id) {
+            expensesMap[exp.renovation_project_id].push(exp);
+          }
+        });
+        setExpenses(expensesMap);
+      }
+    } catch (err) {
+      logger.error('Error fetching projects', err);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const loadedProjects = data || [];
-    setProjects(loadedProjects);
-
-    // Batch load ALL expenses for all projects in one query
-    if (loadedProjects.length > 0) {
-      const projectIds = loadedProjects.map(p => p.id);
-      const allExpenses = await expenseService.getExpensesForProjects(projectIds);
-
-      const expensesMap: Record<string, Expense[]> = {};
-      projectIds.forEach(id => { expensesMap[id] = []; });
-      allExpenses.forEach(exp => {
-        if (exp.renovation_project_id) {
-          expensesMap[exp.renovation_project_id].push(exp);
-        }
-      });
-      setExpenses(expensesMap);
-    }
-
-    setLoading(false);
   };
 
   const fetchExpenses = async (projectId: string) => {
-    const { data, error } = await supabase
-      .from('expenses')
-      .select('*')
-      .eq('renovation_project_id', projectId)
-      .order('date', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching expenses:', error);
-    } else {
-      setExpenses(prev => ({ ...prev, [projectId]: data || [] }));
+    try {
+      const data = await expenseService.getExpenses({ renovationProjectId: projectId });
+      setExpenses(prev => ({ ...prev, [projectId]: data }));
+    } catch (err) {
+      logger.error('Error fetching expenses for project', err);
     }
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void Promise.all([fetchAssets(), fetchProjects()]);
   }, []);
 
@@ -469,59 +454,48 @@ export default function RenovationsPage() {
   };
 
   const updateProjectStatus = async (projectId: string, status: RenovationStatus) => {
-    const { error } = await supabase
-      .from('renovation_projects')
-      .update({ status, end_date: status === 'completed' ? new Date().toISOString().split('T')[0] : null })
-      .eq('id', projectId);
-
-    if (error) {
-      console.error('Error updating project status:', error);
-    } else {
+    try {
+      await renovationService.updateRenovation(projectId, {
+        status,
+        end_date: status === 'completed' ? new Date().toISOString().split('T')[0] : null,
+      });
       fetchProjects();
+    } catch (err) {
+      logger.error('Error updating project status', err);
     }
   };
 
-  const handleCompleteWithAssetUpdate = async (updateAsset: boolean) => {
+  const handleCompleteWithAssetUpdate = async (shouldUpdateAsset: boolean) => {
     if (!completionModal) return;
 
     const { project, newAssetName, updateAssetName } = completionModal;
 
-    // Update project status to completed
-    const { error: projectError } = await supabase
-      .from('renovation_projects')
-      .update({ status: 'completed', end_date: new Date().toISOString().split('T')[0] })
-      .eq('id', project.id);
+    try {
+      // Update project status to completed
+      await renovationService.updateRenovation(project.id, {
+        status: 'completed',
+        end_date: new Date().toISOString().split('T')[0],
+      });
 
-    if (projectError) {
-      console.error('Error updating project:', projectError);
-      setCompletionModal(null);
-      return;
-    }
+      // If user chose to update asset
+      if (shouldUpdateAsset && project.target_property_type) {
+        const assetUpdate: {
+          property_type: PropertyType;
+          status: AssetStatus;
+          name?: string;
+        } = {
+          property_type: project.target_property_type,
+          status: 'ready_for_sale',
+        };
 
-    // If user chose to update asset
-    if (updateAsset && project.target_property_type) {
-      const assetUpdate: {
-        property_type: PropertyType;
-        status: AssetStatus;
-        name?: string;
-      } = {
-        property_type: project.target_property_type,
-        status: 'ready_for_sale', // Mark as ready for sale after renovation/construction completes
-      };
+        if (updateAssetName && newAssetName.trim()) {
+          assetUpdate.name = newAssetName.trim();
+        }
 
-      // Include name update if user wants to update it
-      if (updateAssetName && newAssetName.trim()) {
-        assetUpdate.name = newAssetName.trim();
+        await assetService.updateAsset(project.asset_id, assetUpdate);
       }
-
-      const { error: assetError } = await supabase
-        .from('assets')
-        .update(assetUpdate)
-        .eq('id', project.asset_id);
-
-      if (assetError) {
-        console.error('Error updating asset:', assetError);
-      }
+    } catch (err) {
+      logger.error('Error completing project with asset update', err);
     }
 
     setCompletionModal(null);

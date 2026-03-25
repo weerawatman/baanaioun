@@ -78,11 +78,13 @@ export class ExpenseService {
         try {
             logger.info('Fetching expense by ID', { id });
 
-            const { data, error } = await supabase
-                .from('expenses')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('expenses')
+                    .select('*')
+                    .eq('id', id)
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error fetching expense', error, { id });
@@ -119,11 +121,13 @@ export class ExpenseService {
         try {
             logger.info('Creating expense', { input });
 
-            const { data, error } = await supabase
-                .from('expenses')
-                .insert(input)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('expenses')
+                    .insert(input)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error creating expense', error);
@@ -150,12 +154,14 @@ export class ExpenseService {
         try {
             logger.info('Updating expense', { id, input });
 
-            const { data, error } = await supabase
-                .from('expenses')
-                .update(input)
-                .eq('id', id)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('expenses')
+                    .update(input)
+                    .eq('id', id)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error updating expense', error, { id });
@@ -192,10 +198,12 @@ export class ExpenseService {
         try {
             logger.info('Deleting expense', { id });
 
-            const { error } = await supabase
-                .from('expenses')
-                .delete()
-                .eq('id', id);
+            const { error } = await withTimeout(
+                supabase
+                    .from('expenses')
+                    .delete()
+                    .eq('id', id)
+            );
 
             if (error) {
                 logger.error('Error deleting expense', error, { id });
@@ -220,11 +228,13 @@ export class ExpenseService {
     async getExpensesForProjects(projectIds: string[]): Promise<Expense[]> {
         if (projectIds.length === 0) return [];
 
-        const { data, error } = await supabase
-            .from('expenses')
-            .select('*')
-            .in('renovation_project_id', projectIds)
-            .order('date', { ascending: false });
+        const { data, error } = await withTimeout(
+            supabase
+                .from('expenses')
+                .select('*')
+                .in('renovation_project_id', projectIds)
+                .order('date', { ascending: false })
+        );
 
         if (error) {
             throw new AppError('Failed to fetch expenses for projects', ErrorCodes.DATABASE_ERROR, 500, { originalError: error });

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 import { AssetImage, ImageCategory } from '@/types/database';
-import { AppError, ErrorCodes, logger } from '@/shared/utils';
+import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 
 export interface CreateImageInput {
     asset_id: string;
@@ -22,11 +22,13 @@ export class ImageService {
         try {
             logger.info('Fetching images for asset', { assetId });
 
-            const { data, error } = await supabase
-                .from('asset_images')
-                .select('id, asset_id, renovation_project_id, url, caption, is_primary, category, created_at')
-                .eq('asset_id', assetId)
-                .order('created_at', { ascending: false });
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('asset_images')
+                    .select('id, asset_id, renovation_project_id, url, caption, is_primary, category, created_at')
+                    .eq('asset_id', assetId)
+                    .order('created_at', { ascending: false })
+            );
 
             if (error) {
                 logger.error('Error fetching images', error);
@@ -55,14 +57,16 @@ export class ImageService {
         isFirst: boolean,
         renovationProjectId?: string | null,
     ): Promise<AssetImage> {
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${assetId}/${category}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${assetId}/${category}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-            // Upload to storage
-            const { error: uploadError } = await supabase.storage
-                .from('asset-files')
-                .upload(fileName, file);
+        try {
+            // Phase 1: Upload to storage
+            const { error: uploadError } = await withTimeout(
+                supabase.storage
+                    .from('asset-files')
+                    .upload(fileName, file)
+            );
 
             if (uploadError) {
                 throw new AppError(
@@ -78,20 +82,24 @@ export class ImageService {
                 .from('asset-files')
                 .getPublicUrl(fileName);
 
-            // Save to database
-            const { data, error: dbError } = await supabase
-                .from('asset_images')
-                .insert({
-                    asset_id: assetId,
-                    url: publicUrl,
-                    category,
-                    is_primary: isFirst,
-                    renovation_project_id: renovationProjectId || null,
-                })
-                .select()
-                .single();
+            // Phase 2: Save to database
+            const { data, error: dbError } = await withTimeout(
+                supabase
+                    .from('asset_images')
+                    .insert({
+                        asset_id: assetId,
+                        url: publicUrl,
+                        category,
+                        is_primary: isFirst,
+                        renovation_project_id: renovationProjectId || null,
+                    })
+                    .select()
+                    .single()
+            );
 
             if (dbError) {
+                // Rollback: remove orphaned file from storage
+                await supabase.storage.from('asset-files').remove([fileName]).catch(() => {});
                 throw new AppError(
                     `Failed to save image record: ${dbError.message}`,
                     ErrorCodes.DATABASE_ERROR,
@@ -115,18 +123,13 @@ export class ImageService {
         try {
             logger.info('Deleting image', { id: image.id });
 
-            // Extract file path from URL and remove from storage
-            const urlParts = image.url.split('/asset-files/');
-            if (urlParts.length > 1) {
-                const filePath = urlParts[1];
-                await supabase.storage.from('asset-files').remove([filePath]);
-            }
-
-            // Delete from database
-            const { error } = await supabase
-                .from('asset_images')
-                .delete()
-                .eq('id', image.id);
+            // Phase 1: Delete from database first (reversible if storage delete fails)
+            const { error } = await withTimeout(
+                supabase
+                    .from('asset_images')
+                    .delete()
+                    .eq('id', image.id)
+            );
 
             if (error) {
                 throw new AppError(
@@ -135,6 +138,15 @@ export class ImageService {
                     500,
                     { originalError: error }
                 );
+            }
+
+            // Phase 2: Remove file from storage (best-effort cleanup)
+            const urlParts = image.url.split('/asset-files/');
+            if (urlParts.length > 1) {
+                const filePath = urlParts[1];
+                await supabase.storage.from('asset-files').remove([filePath]).catch((err) => {
+                    logger.error('Failed to remove file from storage (orphaned)', err);
+                });
             }
 
             logger.info('Image deleted successfully', { id: image.id });

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-import { RenovationProject, RenovationStatus, ProjectType } from '@/types/database';
+import { RenovationProject, RenovationProjectWithAsset, RenovationStatus, ProjectType } from '@/types/database';
 import { AppError, ErrorCodes, logger, withTimeout } from '@/shared/utils';
 
 export interface RenovationFilters {
@@ -62,17 +62,60 @@ export class RenovationService {
     }
 
     /**
+     * Fetch renovation projects with joined asset data (for renovations page)
+     */
+    async getRenovationsWithAssets(filters?: RenovationFilters): Promise<RenovationProjectWithAsset[]> {
+        try {
+            logger.info('Fetching renovations with assets', { filters });
+
+            let query = supabase
+                .from('renovation_projects')
+                .select('*, assets(*)')
+                .order('created_at', { ascending: false });
+
+            if (filters?.status) {
+                query = query.eq('status', filters.status);
+            }
+            if (filters?.assetId) {
+                query = query.eq('asset_id', filters.assetId);
+            }
+            if (filters?.projectType) {
+                query = query.eq('project_type', filters.projectType);
+            }
+
+            const { data, error } = await withTimeout(query);
+
+            if (error) {
+                logger.error('Error fetching renovations with assets', error);
+                throw new AppError(
+                    'Failed to fetch renovation projects',
+                    ErrorCodes.DATABASE_ERROR,
+                    500,
+                    { originalError: error }
+                );
+            }
+
+            return (data || []) as RenovationProjectWithAsset[];
+        } catch (error) {
+            logger.error('Unexpected error in getRenovationsWithAssets', error);
+            throw error;
+        }
+    }
+
+    /**
      * Get a single renovation project by ID
      */
     async getRenovationById(id: string): Promise<RenovationProject> {
         try {
             logger.info('Fetching renovation by ID', { id });
 
-            const { data, error } = await supabase
-                .from('renovation_projects')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('renovation_projects')
+                    .select('*')
+                    .eq('id', id)
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error fetching renovation', error, { id });
@@ -109,11 +152,13 @@ export class RenovationService {
         try {
             logger.info('Creating renovation', { input });
 
-            const { data, error } = await supabase
-                .from('renovation_projects')
-                .insert(input)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('renovation_projects')
+                    .insert(input)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error creating renovation', error);
@@ -140,12 +185,14 @@ export class RenovationService {
         try {
             logger.info('Updating renovation', { id, input });
 
-            const { data, error } = await supabase
-                .from('renovation_projects')
-                .update(input)
-                .eq('id', id)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('renovation_projects')
+                    .update(input)
+                    .eq('id', id)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error updating renovation', error, { id });
@@ -182,10 +229,12 @@ export class RenovationService {
         try {
             logger.info('Deleting renovation', { id });
 
-            const { error } = await supabase
-                .from('renovation_projects')
-                .delete()
-                .eq('id', id);
+            const { error } = await withTimeout(
+                supabase
+                    .from('renovation_projects')
+                    .delete()
+                    .eq('id', id)
+            );
 
             if (error) {
                 logger.error('Error deleting renovation', error, { id });

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { ExpenseCategory } from '@/types/database';
 import { EXPENSE_CATEGORY_OPTIONS } from '@/shared/utils';
 import { Spinner } from '@/shared/components/ui';
+import { expenseService } from '@/features/expenses/services/expenseService';
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -45,7 +45,7 @@ export default function AddExpenseModal({
     setError(null);
 
     try {
-      const { error: insertError } = await supabase.from('expenses').insert({
+      await expenseService.createExpense({
         renovation_project_id: renovationProjectId,
         asset_id: assetId,
         category: formData.category,
@@ -54,8 +54,6 @@ export default function AddExpenseModal({
         description: formData.description || null,
         vendor: formData.vendor || null,
       });
-
-      if (insertError) throw insertError;
 
       setFormData({
         category: 'materials',

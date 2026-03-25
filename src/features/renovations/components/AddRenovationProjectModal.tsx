@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { supabase } from '@/lib/supabase/client';
 import { Asset, RenovationStatus, ProjectType, PropertyType } from '@/types/database';
 import { Spinner } from '@/shared/components/ui';
+import { renovationService } from '@/features/renovations/services/renovationService';
 
 const renovationFormSchema = z.object({
   asset_id: z.string().min(1, 'กรุณาเลือกทรัพย์สิน'),
@@ -116,7 +116,7 @@ export default function AddRenovationProjectModal({
     setLoading(true);
 
     try {
-      const { error: insertError } = await supabase.from('renovation_projects').insert({
+      await renovationService.createRenovation({
         asset_id: formData.asset_id,
         name: formData.name,
         description: formData.description || null,
@@ -129,8 +129,6 @@ export default function AddRenovationProjectModal({
           ? formData.target_property_type
           : null,
       });
-
-      if (insertError) throw insertError;
 
       setFormData({
         asset_id: '',

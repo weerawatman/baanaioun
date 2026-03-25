@@ -73,11 +73,13 @@ export class IncomeService {
         try {
             logger.info('Fetching income by ID', { id });
 
-            const { data, error } = await supabase
-                .from('incomes')
-                .select('*')
-                .eq('id', id)
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('incomes')
+                    .select('*')
+                    .eq('id', id)
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error fetching income', error, { id });
@@ -114,11 +116,13 @@ export class IncomeService {
         try {
             logger.info('Creating income', { input });
 
-            const { data, error } = await supabase
-                .from('incomes')
-                .insert(input)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('incomes')
+                    .insert(input)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error creating income', error);
@@ -145,12 +149,14 @@ export class IncomeService {
         try {
             logger.info('Updating income', { id, input });
 
-            const { data, error } = await supabase
-                .from('incomes')
-                .update(input)
-                .eq('id', id)
-                .select()
-                .single();
+            const { data, error } = await withTimeout(
+                supabase
+                    .from('incomes')
+                    .update(input)
+                    .eq('id', id)
+                    .select()
+                    .single()
+            );
 
             if (error) {
                 logger.error('Error updating income', error, { id });
@@ -187,10 +193,12 @@ export class IncomeService {
         try {
             logger.info('Deleting income', { id });
 
-            const { error } = await supabase
-                .from('incomes')
-                .delete()
-                .eq('id', id);
+            const { error } = await withTimeout(
+                supabase
+                    .from('incomes')
+                    .delete()
+                    .eq('id', id)
+            );
 
             if (error) {
                 logger.error('Error deleting income', error, { id });

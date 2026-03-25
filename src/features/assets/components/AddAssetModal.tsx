@@ -67,14 +67,12 @@ export default function AddAssetModal({ isOpen, onClose, onSuccess, asset, mode 
   // Re-populate form whenever the modal opens or the asset prop changes
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(buildFormData(asset));
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError(null);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFieldErrors({});
     }
-  }, [isOpen, asset]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, asset?.id]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

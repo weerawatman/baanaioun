@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
 import { Asset } from '@/types/database';
 import { Spinner } from '@/shared/components/ui';
+import { incomeService } from '@/features/income/services/incomeService';
 
 interface AddIncomeModalProps {
   isOpen: boolean;
@@ -81,15 +81,13 @@ export default function AddIncomeModal({
         throw new Error('กรุณาระบุแหล่งรายรับ');
       }
 
-      const { error: insertError } = await supabase.from('incomes').insert({
+      await incomeService.createIncome({
         asset_id: formData.asset_id,
         source: source.trim(),
         amount: parseFloat(formData.amount) || 0,
         date: formData.date,
         description: formData.description || null,
       });
-
-      if (insertError) throw insertError;
 
       setFormData({
         asset_id: preselectedAssetId || '',
