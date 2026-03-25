@@ -94,7 +94,7 @@ export class AssetService {
         // On failure, refresh the session so the NEXT SWR retry attempt uses a fresh token,
         // then rethrow immediately — SWR owns all retry scheduling.
         // Keeping a single withTimeout per SWR attempt prevents 240 s hangs (two timeouts stacked).
-        const result = await withTimeout(query).catch(async (err) => {
+        const result = await withTimeout(query, 20000).catch(async (err) => {
             if (isAbortError(err)) throw err; // AbortErrors are intentional — never refresh or retry
             try { await supabase.auth.refreshSession(); } catch { /* non-fatal */ }
             throw err; // rethrow so SWR schedules the next attempt with the refreshed session

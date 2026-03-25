@@ -25,7 +25,16 @@ export function useLocalStorage<T>(
 
         try {
             const item = window.localStorage.getItem(key);
-            return item ? JSON.parse(item) : initialValue;
+            if (item === null) return initialValue;
+            try {
+                return JSON.parse(item) as T;
+            } catch {
+                // Value was stored as a plain string (pre-JSON format) — use it directly for string types
+                if (typeof initialValue === 'string') return item as T;
+                // Non-string type with invalid JSON — reset to initial
+                window.localStorage.removeItem(key);
+                return initialValue;
+            }
         } catch (error) {
             console.error(`Error reading localStorage key "${key}":`, error);
             return initialValue;

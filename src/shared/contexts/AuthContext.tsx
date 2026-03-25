@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import type { User } from '@supabase/supabase-js';
 import type { UserProfile } from '@/types/database';
+import { withTimeout } from '@/shared/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -32,26 +33,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let pingIntervalId: ReturnType<typeof setInterval> | null = null;
 
     const fetchProfile = async (userId: string) => {
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-      if (!cancelled) setProfile(data ?? null);
+      try {
+        // Use a 10s timeout for initial auth profile fetch to prevent "infinite loading"
+        // if the database is locked or experiencing high latency.
+        const { data, error } = await withTimeout(
+          supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', userId)
+            .maybeSingle(),
+          10000
+        );
+        
+        if (error) console.error('AuthContext: Error fetching profile:', error);
+        if (!cancelled) setProfile(data ?? null);
+      } catch (err) {
+        console.error('AuthContext: Unexpected error fetching profile:', err);
+        if (!cancelled) setProfile(null);
+      }
     };
 
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled) return;
-      setUser(session?.user ?? null);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) console.error('AuthContext: Error getting session:', error);
+        
+        if (cancelled) return;
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await fetchProfile(session.user.id);
-      }
-
-      if (!cancelled) {
-        setLoading(false);
-        initialLoad = false;
+        if (session?.user) {
+          await fetchProfile(session.user.id);
+        }
+      } catch (err) {
+        console.error('AuthContext: Unexpected error in getSession:', err);
+        if (!cancelled) {
+          setUser(null);
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          initialLoad = false;
+        }
       }
     };
 

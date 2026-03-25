@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import { PublicAsset, ImageCategory } from '@/types/database';
 import Link from 'next/link';
 import { parseLatLong } from '@/shared/utils/geo';
-import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS } from '@/shared/utils';
+import { formatCurrency, PROPERTY_TYPE_LABELS, IMAGE_CATEGORY_LABELS, withTimeout } from '@/shared/utils';
 import { env } from '@/config/env';
 
 
@@ -126,13 +126,13 @@ export default function ListingDetailPage({
       setLoading(true);
       try {
         const [assetResult, imagesResult] = await Promise.all([
-          supabase.from('public_assets').select('*').eq('id', id).single(),
-          supabase
+          withTimeout(supabase.from('public_assets').select('*').eq('id', id).single(), 10000),
+          withTimeout(supabase
             .from('public_asset_images')
             .select('*')
             .eq('asset_id', id)
             .order('is_primary', { ascending: false })
-            .order('created_at', { ascending: true }),
+            .order('created_at', { ascending: true }), 10000),
         ]);
 
         if (assetResult.error || !assetResult.data) {
@@ -145,6 +145,7 @@ export default function ListingDetailPage({
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         console.error('Error fetching listing details:', err);
+        setNotFound(true); // Treat timeout/error as not found for UX consistency
       } finally {
         setLoading(false);
       }
